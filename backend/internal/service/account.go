@@ -5,8 +5,67 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/Wei-Shaw/sub2api/internal/model"
 )
+
+// ScheduleRule 是 model.ScheduleRule 的别名
+// 定义时间段调度规则
+// weekdays 表示规则的"开始日"，跨天规则自动延续到次日
+// 区间语义为 [start_minute, end_minute)，左闭右开
+type ScheduleRule = model.ScheduleRule
+
+// ParseTimeToMinute 将 "HH:MM" 格式转换为分钟数（用于 API 输入转换）
+func ParseTimeToMinute(timeStr string) (int, error) {
+	t, err := time.Parse("15:04", timeStr)
+	if err != nil {
+		return 0, err
+	}
+	return t.Hour()*60 + t.Minute(), nil
+}
+
+// MinuteToTimeStr 将分钟数转换为 "HH:MM" 格式（用于 API 输出显示）
+func MinuteToTimeStr(minute int) string {
+	return model.MinuteToTimeStr(minute)
+}
+
+// ScheduleCheckResult 时间段检查结果
+type ScheduleCheckResult struct {
+	IsWithinWindow    bool
+	Reason            string     // outside_schedule, invalid_config_no_rules, invalid_timezone
+	NextAvailableTime *time.Time // 下次可用时间（仅当不在窗口内时有值）
+}
+
+// timezoneCache 时区缓存，避免重复加载
+var timezoneCache sync.Map
+
+func loadTimezone(tz string) (*time.Location, error) {
+	if loc, ok := timezoneCache.Load(tz); ok {
+		return loc.(*time.Location), nil
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return nil, err
+	}
+	timezoneCache.Store(tz, loc)
+	return loc, nil
+}
+
+func containsWeekday(weekdays []int, target int) bool {
+	for _, wd := range weekdays {
+		if wd == target {
+			return true
+		}
+	}
+	return false
+}
+
+// timeToMinute 将时间转换为当天的分钟数
+func timeToMinute(t time.Time) int {
+	return t.Hour()*60 + t.Minute()
+}
 
 type Account struct {
 	ID          int64
@@ -42,6 +101,11 @@ type Account struct {
 	SessionWindowStart  *time.Time
 	SessionWindowEnd    *time.Time
 	SessionWindowStatus string
+
+	// 时间段调度字段（仅对 Anthropic OAuth/SetupToken 账号生效）
+	ScheduleEnabled  bool
+	ScheduleTimezone string
+	ScheduleRules    []ScheduleRule
 
 	Proxy         *Proxy
 	AccountGroups []AccountGroup
@@ -90,6 +154,12 @@ func (a *Account) IsSchedulable() bool {
 	}
 	if a.TempUnschedulableUntil != nil && now.Before(*a.TempUnschedulableUntil) {
 		return false
+	}
+	// 时间段调度检查（仅针对 Anthropic OAuth/SetupToken 账号）
+	if a.IsAnthropicOAuthOrSetupToken() && a.ScheduleEnabled {
+		if !a.IsWithinScheduleWindow() {
+			return false
+		}
 	}
 	return true
 }
@@ -778,4 +848,112 @@ func parseExtraInt(value any) int {
 		}
 	}
 	return 0
+}
+
+// ========== 时间段调度相关方法 ==========
+
+// IsWithinScheduleWindow 检查当前时间是否在允许的调度时间段内
+func (a *Account) IsWithinScheduleWindow() bool {
+	result := a.CheckScheduleWindow()
+	return result.IsWithinWindow
+}
+
+// CheckScheduleWindow 检查时间段调度状态，返回详细结果
+func (a *Account) CheckScheduleWindow() ScheduleCheckResult {
+	return a.checkScheduleWindowWithTime(time.Now())
+}
+
+// checkScheduleWindowWithTime 是 CheckScheduleWindow 的内部实现，接受自定义时间用于测试
+func (a *Account) checkScheduleWindowWithTime(now time.Time) ScheduleCheckResult {
+	if !a.ScheduleEnabled {
+		return ScheduleCheckResult{IsWithinWindow: true}
+	}
+
+	if len(a.ScheduleRules) == 0 {
+		// 启用了调度但无规则，视为配置错误，不可用
+		return ScheduleCheckResult{
+			IsWithinWindow: false,
+			Reason:         "invalid_config_no_rules",
+		}
+	}
+
+	// 加载时区（使用缓存）
+	loc, err := loadTimezone(a.ScheduleTimezone)
+	if err != nil {
+		// 时区加载失败，视为配置错误，不可用（不静默回退 UTC）
+		return ScheduleCheckResult{
+			IsWithinWindow: false,
+			Reason:         "invalid_timezone",
+		}
+	}
+
+	now = now.In(loc)
+	currentWeekday := int(now.Weekday())
+	currentMinute := timeToMinute(now)
+	prevWeekday := (currentWeekday + 6) % 7 // 前一天
+
+	// 遍历规则，检查是否匹配
+	for _, rule := range a.ScheduleRules {
+		if rule.IsCrossDay() {
+			// 跨天规则：拆分为两段检查
+			// 段1: 开始日 [start_minute, 1440)
+			if containsWeekday(rule.Weekdays, currentWeekday) && currentMinute >= rule.StartMinute {
+				return ScheduleCheckResult{IsWithinWindow: true}
+			}
+			// 段2: 次日 [0, end_minute)
+			if containsWeekday(rule.Weekdays, prevWeekday) && currentMinute < rule.EndMinute {
+				return ScheduleCheckResult{IsWithinWindow: true}
+			}
+		} else {
+			// 非跨天规则：[start_minute, end_minute)
+			if containsWeekday(rule.Weekdays, currentWeekday) &&
+				currentMinute >= rule.StartMinute && currentMinute < rule.EndMinute {
+				return ScheduleCheckResult{IsWithinWindow: true}
+			}
+		}
+	}
+
+	// 计算下次可用时间
+	nextAvailable := a.calculateNextAvailableTime(now, loc)
+
+	return ScheduleCheckResult{
+		IsWithinWindow:    false,
+		Reason:            "outside_schedule",
+		NextAvailableTime: nextAvailable,
+	}
+}
+
+// calculateNextAvailableTime 计算下次可用时间
+// 简化实现：遍历未来 7 天，找到第一个匹配的时间点
+func (a *Account) calculateNextAvailableTime(now time.Time, loc *time.Location) *time.Time {
+	for dayOffset := 0; dayOffset < 8; dayOffset++ {
+		checkDate := now.AddDate(0, 0, dayOffset)
+		checkWeekday := int(checkDate.Weekday())
+
+		for _, rule := range a.ScheduleRules {
+			if !containsWeekday(rule.Weekdays, checkWeekday) {
+				continue
+			}
+
+			// 构造该规则在 checkDate 的开始时间
+			startTime := time.Date(
+				checkDate.Year(), checkDate.Month(), checkDate.Day(),
+				rule.StartMinute/60, rule.StartMinute%60, 0, 0, loc,
+			)
+
+			// 如果是今天且开始时间已过，跳过
+			if dayOffset == 0 && !startTime.After(now) {
+				continue
+			}
+
+			// 处理 DST：检查时间是否有效
+			if timeToMinute(startTime) != rule.StartMinute {
+				// DST 导致时间跳跃，尝试加一小时
+				startTime = startTime.Add(time.Hour)
+			}
+
+			return &startTime
+		}
+	}
+	return nil
 }

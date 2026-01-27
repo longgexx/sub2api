@@ -200,6 +200,16 @@ func init() {
 	accountDescSessionWindowStatus := accountFields[21].Descriptor()
 	// account.SessionWindowStatusValidator is a validator for the "session_window_status" field. It is called by the builders before save.
 	account.SessionWindowStatusValidator = accountDescSessionWindowStatus.Validators[0].(func(string) error)
+	// accountDescScheduleEnabled is the schema descriptor for schedule_enabled field.
+	accountDescScheduleEnabled := accountFields[22].Descriptor()
+	// account.DefaultScheduleEnabled holds the default value on creation for the schedule_enabled field.
+	account.DefaultScheduleEnabled = accountDescScheduleEnabled.Default.(bool)
+	// accountDescScheduleTimezone is the schema descriptor for schedule_timezone field.
+	accountDescScheduleTimezone := accountFields[23].Descriptor()
+	// account.DefaultScheduleTimezone holds the default value on creation for the schedule_timezone field.
+	account.DefaultScheduleTimezone = accountDescScheduleTimezone.Default.(string)
+	// account.ScheduleTimezoneValidator is a validator for the "schedule_timezone" field. It is called by the builders before save.
+	account.ScheduleTimezoneValidator = accountDescScheduleTimezone.Validators[0].(func(string) error)
 	accountgroupFields := schema.AccountGroup{}.Fields()
 	_ = accountgroupFields
 	// accountgroupDescPriority is the schema descriptor for priority field.

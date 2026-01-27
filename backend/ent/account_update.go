@@ -10,12 +10,14 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
+	"github.com/Wei-Shaw/sub2api/internal/model"
 )
 
 // AccountUpdate is the builder for updating Account entities.
@@ -436,6 +438,52 @@ func (_u *AccountUpdate) ClearSessionWindowStatus() *AccountUpdate {
 	return _u
 }
 
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (_u *AccountUpdate) SetScheduleEnabled(v bool) *AccountUpdate {
+	_u.mutation.SetScheduleEnabled(v)
+	return _u
+}
+
+// SetNillableScheduleEnabled sets the "schedule_enabled" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableScheduleEnabled(v *bool) *AccountUpdate {
+	if v != nil {
+		_u.SetScheduleEnabled(*v)
+	}
+	return _u
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (_u *AccountUpdate) SetScheduleTimezone(v string) *AccountUpdate {
+	_u.mutation.SetScheduleTimezone(v)
+	return _u
+}
+
+// SetNillableScheduleTimezone sets the "schedule_timezone" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableScheduleTimezone(v *string) *AccountUpdate {
+	if v != nil {
+		_u.SetScheduleTimezone(*v)
+	}
+	return _u
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (_u *AccountUpdate) SetScheduleRules(v []model.ScheduleRule) *AccountUpdate {
+	_u.mutation.SetScheduleRules(v)
+	return _u
+}
+
+// AppendScheduleRules appends value to the "schedule_rules" field.
+func (_u *AccountUpdate) AppendScheduleRules(v []model.ScheduleRule) *AccountUpdate {
+	_u.mutation.AppendScheduleRules(v)
+	return _u
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (_u *AccountUpdate) ClearScheduleRules() *AccountUpdate {
+	_u.mutation.ClearScheduleRules()
+	return _u
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (_u *AccountUpdate) AddGroupIDs(ids ...int64) *AccountUpdate {
 	_u.mutation.AddGroupIDs(ids...)
@@ -593,6 +641,11 @@ func (_u *AccountUpdate) check() error {
 			return &ValidationError{Name: "session_window_status", err: fmt.Errorf(`ent: validator failed for field "Account.session_window_status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ScheduleTimezone(); ok {
+		if err := account.ScheduleTimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "schedule_timezone", err: fmt.Errorf(`ent: validator failed for field "Account.schedule_timezone": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -718,6 +771,23 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SessionWindowStatusCleared() {
 		_spec.ClearField(account.FieldSessionWindowStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.ScheduleEnabled(); ok {
+		_spec.SetField(account.FieldScheduleEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ScheduleTimezone(); ok {
+		_spec.SetField(account.FieldScheduleTimezone, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ScheduleRules(); ok {
+		_spec.SetField(account.FieldScheduleRules, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedScheduleRules(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, account.FieldScheduleRules, value)
+		})
+	}
+	if _u.mutation.ScheduleRulesCleared() {
+		_spec.ClearField(account.FieldScheduleRules, field.TypeJSON)
 	}
 	if _u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1275,6 +1345,52 @@ func (_u *AccountUpdateOne) ClearSessionWindowStatus() *AccountUpdateOne {
 	return _u
 }
 
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (_u *AccountUpdateOne) SetScheduleEnabled(v bool) *AccountUpdateOne {
+	_u.mutation.SetScheduleEnabled(v)
+	return _u
+}
+
+// SetNillableScheduleEnabled sets the "schedule_enabled" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableScheduleEnabled(v *bool) *AccountUpdateOne {
+	if v != nil {
+		_u.SetScheduleEnabled(*v)
+	}
+	return _u
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (_u *AccountUpdateOne) SetScheduleTimezone(v string) *AccountUpdateOne {
+	_u.mutation.SetScheduleTimezone(v)
+	return _u
+}
+
+// SetNillableScheduleTimezone sets the "schedule_timezone" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableScheduleTimezone(v *string) *AccountUpdateOne {
+	if v != nil {
+		_u.SetScheduleTimezone(*v)
+	}
+	return _u
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (_u *AccountUpdateOne) SetScheduleRules(v []model.ScheduleRule) *AccountUpdateOne {
+	_u.mutation.SetScheduleRules(v)
+	return _u
+}
+
+// AppendScheduleRules appends value to the "schedule_rules" field.
+func (_u *AccountUpdateOne) AppendScheduleRules(v []model.ScheduleRule) *AccountUpdateOne {
+	_u.mutation.AppendScheduleRules(v)
+	return _u
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (_u *AccountUpdateOne) ClearScheduleRules() *AccountUpdateOne {
+	_u.mutation.ClearScheduleRules()
+	return _u
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (_u *AccountUpdateOne) AddGroupIDs(ids ...int64) *AccountUpdateOne {
 	_u.mutation.AddGroupIDs(ids...)
@@ -1445,6 +1561,11 @@ func (_u *AccountUpdateOne) check() error {
 			return &ValidationError{Name: "session_window_status", err: fmt.Errorf(`ent: validator failed for field "Account.session_window_status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ScheduleTimezone(); ok {
+		if err := account.ScheduleTimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "schedule_timezone", err: fmt.Errorf(`ent: validator failed for field "Account.schedule_timezone": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1587,6 +1708,23 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 	}
 	if _u.mutation.SessionWindowStatusCleared() {
 		_spec.ClearField(account.FieldSessionWindowStatus, field.TypeString)
+	}
+	if value, ok := _u.mutation.ScheduleEnabled(); ok {
+		_spec.SetField(account.FieldScheduleEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ScheduleTimezone(); ok {
+		_spec.SetField(account.FieldScheduleTimezone, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ScheduleRules(); ok {
+		_spec.SetField(account.FieldScheduleRules, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedScheduleRules(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, account.FieldScheduleRules, value)
+		})
+	}
+	if _u.mutation.ScheduleRulesCleared() {
+		_spec.ClearField(account.FieldScheduleRules, field.TypeJSON)
 	}
 	if _u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -2,6 +2,7 @@
 package dto
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -202,6 +203,32 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 			enabled := true
 			out.EnableSessionIDMasking = &enabled
 		}
+
+		// 时间段调度配置
+		out.ScheduleEnabled = a.ScheduleEnabled
+		out.ScheduleTimezone = a.ScheduleTimezone
+		if len(a.ScheduleRules) > 0 {
+			out.ScheduleRules = make([]ScheduleRuleOutput, 0, len(a.ScheduleRules))
+			for _, rule := range a.ScheduleRules {
+				out.ScheduleRules = append(out.ScheduleRules, ScheduleRuleOutput{
+					Weekdays:     rule.Weekdays,
+					StartMinute:  rule.StartMinute,
+					EndMinute:    rule.EndMinute,
+					StartTimeStr: minuteToTimeStr(rule.StartMinute),
+					EndTimeStr:   minuteToTimeStr(rule.EndMinute),
+				})
+			}
+		}
+
+		// 计算当前调度状态
+		if a.ScheduleEnabled {
+			result := a.CheckScheduleWindow()
+			out.ScheduleStatus = &ScheduleStatus{
+				IsWithinWindow:    result.IsWithinWindow,
+				Reason:            result.Reason,
+				NextAvailableTime: result.NextAvailableTime,
+			}
+		}
 	}
 
 	return out
@@ -235,6 +262,13 @@ func timeToUnixSeconds(value *time.Time) *int64 {
 	}
 	ts := value.Unix()
 	return &ts
+}
+
+// minuteToTimeStr 将分钟数转换为 "HH:MM" 格式
+func minuteToTimeStr(minute int) string {
+	h := minute / 60
+	m := minute % 60
+	return fmt.Sprintf("%02d:%02d", h, m)
 }
 
 func AccountGroupFromService(ag *service.AccountGroup) *AccountGroup {

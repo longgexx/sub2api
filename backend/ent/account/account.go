@@ -65,6 +65,12 @@ const (
 	FieldSessionWindowEnd = "session_window_end"
 	// FieldSessionWindowStatus holds the string denoting the session_window_status field in the database.
 	FieldSessionWindowStatus = "session_window_status"
+	// FieldScheduleEnabled holds the string denoting the schedule_enabled field in the database.
+	FieldScheduleEnabled = "schedule_enabled"
+	// FieldScheduleTimezone holds the string denoting the schedule_timezone field in the database.
+	FieldScheduleTimezone = "schedule_timezone"
+	// FieldScheduleRules holds the string denoting the schedule_rules field in the database.
+	FieldScheduleRules = "schedule_rules"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
 	// EdgeProxy holds the string denoting the proxy edge name in mutations.
@@ -131,6 +137,9 @@ var Columns = []string{
 	FieldSessionWindowStart,
 	FieldSessionWindowEnd,
 	FieldSessionWindowStatus,
+	FieldScheduleEnabled,
+	FieldScheduleTimezone,
+	FieldScheduleRules,
 }
 
 var (
@@ -189,6 +198,12 @@ var (
 	DefaultSchedulable bool
 	// SessionWindowStatusValidator is a validator for the "session_window_status" field. It is called by the builders before save.
 	SessionWindowStatusValidator func(string) error
+	// DefaultScheduleEnabled holds the default value on creation for the "schedule_enabled" field.
+	DefaultScheduleEnabled bool
+	// DefaultScheduleTimezone holds the default value on creation for the "schedule_timezone" field.
+	DefaultScheduleTimezone string
+	// ScheduleTimezoneValidator is a validator for the "schedule_timezone" field. It is called by the builders before save.
+	ScheduleTimezoneValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the Account queries.
@@ -312,6 +327,16 @@ func BySessionWindowEnd(opts ...sql.OrderTermOption) OrderOption {
 // BySessionWindowStatus orders the results by the session_window_status field.
 func BySessionWindowStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSessionWindowStatus, opts...).ToFunc()
+}
+
+// ByScheduleEnabled orders the results by the schedule_enabled field.
+func ByScheduleEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldScheduleEnabled, opts...).ToFunc()
+}
+
+// ByScheduleTimezone orders the results by the schedule_timezone field.
+func ByScheduleTimezone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldScheduleTimezone, opts...).ToFunc()
 }
 
 // ByGroupsCount orders the results by groups count.

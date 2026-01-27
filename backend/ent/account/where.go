@@ -170,6 +170,16 @@ func SessionWindowStatus(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldSessionWindowStatus, v))
 }
 
+// ScheduleEnabled applies equality check predicate on the "schedule_enabled" field. It's identical to ScheduleEnabledEQ.
+func ScheduleEnabled(v bool) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldScheduleEnabled, v))
+}
+
+// ScheduleTimezone applies equality check predicate on the "schedule_timezone" field. It's identical to ScheduleTimezoneEQ.
+func ScheduleTimezone(v string) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldScheduleTimezone, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldCreatedAt, v))
@@ -1303,6 +1313,91 @@ func SessionWindowStatusEqualFold(v string) predicate.Account {
 // SessionWindowStatusContainsFold applies the ContainsFold predicate on the "session_window_status" field.
 func SessionWindowStatusContainsFold(v string) predicate.Account {
 	return predicate.Account(sql.FieldContainsFold(FieldSessionWindowStatus, v))
+}
+
+// ScheduleEnabledEQ applies the EQ predicate on the "schedule_enabled" field.
+func ScheduleEnabledEQ(v bool) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldScheduleEnabled, v))
+}
+
+// ScheduleEnabledNEQ applies the NEQ predicate on the "schedule_enabled" field.
+func ScheduleEnabledNEQ(v bool) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldScheduleEnabled, v))
+}
+
+// ScheduleTimezoneEQ applies the EQ predicate on the "schedule_timezone" field.
+func ScheduleTimezoneEQ(v string) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneNEQ applies the NEQ predicate on the "schedule_timezone" field.
+func ScheduleTimezoneNEQ(v string) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneIn applies the In predicate on the "schedule_timezone" field.
+func ScheduleTimezoneIn(vs ...string) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldScheduleTimezone, vs...))
+}
+
+// ScheduleTimezoneNotIn applies the NotIn predicate on the "schedule_timezone" field.
+func ScheduleTimezoneNotIn(vs ...string) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldScheduleTimezone, vs...))
+}
+
+// ScheduleTimezoneGT applies the GT predicate on the "schedule_timezone" field.
+func ScheduleTimezoneGT(v string) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneGTE applies the GTE predicate on the "schedule_timezone" field.
+func ScheduleTimezoneGTE(v string) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneLT applies the LT predicate on the "schedule_timezone" field.
+func ScheduleTimezoneLT(v string) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneLTE applies the LTE predicate on the "schedule_timezone" field.
+func ScheduleTimezoneLTE(v string) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneContains applies the Contains predicate on the "schedule_timezone" field.
+func ScheduleTimezoneContains(v string) predicate.Account {
+	return predicate.Account(sql.FieldContains(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneHasPrefix applies the HasPrefix predicate on the "schedule_timezone" field.
+func ScheduleTimezoneHasPrefix(v string) predicate.Account {
+	return predicate.Account(sql.FieldHasPrefix(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneHasSuffix applies the HasSuffix predicate on the "schedule_timezone" field.
+func ScheduleTimezoneHasSuffix(v string) predicate.Account {
+	return predicate.Account(sql.FieldHasSuffix(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneEqualFold applies the EqualFold predicate on the "schedule_timezone" field.
+func ScheduleTimezoneEqualFold(v string) predicate.Account {
+	return predicate.Account(sql.FieldEqualFold(FieldScheduleTimezone, v))
+}
+
+// ScheduleTimezoneContainsFold applies the ContainsFold predicate on the "schedule_timezone" field.
+func ScheduleTimezoneContainsFold(v string) predicate.Account {
+	return predicate.Account(sql.FieldContainsFold(FieldScheduleTimezone, v))
+}
+
+// ScheduleRulesIsNil applies the IsNil predicate on the "schedule_rules" field.
+func ScheduleRulesIsNil() predicate.Account {
+	return predicate.Account(sql.FieldIsNull(FieldScheduleRules))
+}
+
+// ScheduleRulesNotNil applies the NotNil predicate on the "schedule_rules" field.
+func ScheduleRulesNotNil() predicate.Account {
+	return predicate.Account(sql.FieldNotNull(FieldScheduleRules))
 }
 
 // HasGroups applies the HasEdge predicate on the "groups" edge.

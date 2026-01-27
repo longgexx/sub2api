@@ -151,6 +151,11 @@ type CreateAccountInput struct {
 	// SkipMixedChannelCheck skips the mixed channel risk check when binding groups.
 	// This should only be set when the caller has explicitly confirmed the risk.
 	SkipMixedChannelCheck bool
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	ScheduleEnabled  *bool
+	ScheduleTimezone string
+	ScheduleRules    []ScheduleRule
 }
 
 type UpdateAccountInput struct {
@@ -168,6 +173,11 @@ type UpdateAccountInput struct {
 	ExpiresAt             *int64
 	AutoPauseOnExpired    *bool
 	SkipMixedChannelCheck bool // 跳过混合渠道检查（用户已确认风险）
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	ScheduleEnabled  *bool
+	ScheduleTimezone *string
+	ScheduleRules    *[]ScheduleRule
 }
 
 // BulkUpdateAccountsInput describes the payload for bulk updating accounts.
@@ -858,6 +868,18 @@ func (s *adminServiceImpl) CreateAccount(ctx context.Context, input *CreateAccou
 		}
 		account.RateMultiplier = input.RateMultiplier
 	}
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	if input.ScheduleEnabled != nil && *input.ScheduleEnabled {
+		account.ScheduleEnabled = true
+		if input.ScheduleTimezone != "" {
+			account.ScheduleTimezone = input.ScheduleTimezone
+		} else {
+			account.ScheduleTimezone = "UTC"
+		}
+		account.ScheduleRules = input.ScheduleRules
+	}
+
 	if err := s.accountRepo.Create(ctx, account); err != nil {
 		return nil, err
 	}
@@ -929,6 +951,17 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 	}
 	if input.AutoPauseOnExpired != nil {
 		account.AutoPauseOnExpired = *input.AutoPauseOnExpired
+	}
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	if input.ScheduleEnabled != nil {
+		account.ScheduleEnabled = *input.ScheduleEnabled
+	}
+	if input.ScheduleTimezone != nil {
+		account.ScheduleTimezone = *input.ScheduleTimezone
+	}
+	if input.ScheduleRules != nil {
+		account.ScheduleRules = *input.ScheduleRules
 	}
 
 	// 先验证分组是否存在（在任何写操作之前）

@@ -134,6 +134,12 @@ type Account struct {
 	// 从 extra 字段提取，方便前端显示和编辑
 	EnableSessionIDMasking *bool `json:"session_id_masking_enabled,omitempty"`
 
+	// 时间段调度（仅 Anthropic OAuth/SetupToken 账号有效）
+	ScheduleEnabled  bool                 `json:"schedule_enabled"`
+	ScheduleTimezone string               `json:"schedule_timezone"`
+	ScheduleRules    []ScheduleRuleOutput `json:"schedule_rules,omitempty"`
+	ScheduleStatus   *ScheduleStatus      `json:"schedule_status,omitempty"`
+
 	Proxy         *Proxy         `json:"proxy,omitempty"`
 	AccountGroups []AccountGroup `json:"account_groups,omitempty"`
 
@@ -379,4 +385,29 @@ type PromoCodeUsage struct {
 	UsedAt      time.Time `json:"used_at"`
 
 	User *User `json:"user,omitempty"`
+}
+
+// ========== 时间段调度相关类型 ==========
+
+// ScheduleRuleInput API 输入格式（使用 HH:MM 字符串，便于用户配置）
+type ScheduleRuleInput struct {
+	Weekdays  []int  `json:"weekdays" binding:"required,min=1,dive,min=0,max=6"`
+	StartTime string `json:"start_time" binding:"required"` // "HH:MM" format
+	EndTime   string `json:"end_time" binding:"required"`   // "HH:MM" format
+}
+
+// ScheduleRuleOutput API 输出格式（同时包含分钟数和字符串，便于显示）
+type ScheduleRuleOutput struct {
+	Weekdays     []int  `json:"weekdays"`
+	StartMinute  int    `json:"start_minute"`
+	EndMinute    int    `json:"end_minute"`
+	StartTimeStr string `json:"start_time"` // "HH:MM" for display
+	EndTimeStr   string `json:"end_time"`   // "HH:MM" for display
+}
+
+// ScheduleStatus 调度状态信息（仅用于显示）
+type ScheduleStatus struct {
+	IsWithinWindow    bool       `json:"is_within_window"`
+	Reason            string     `json:"reason,omitempty"` // outside_schedule, invalid_config_no_rules, invalid_timezone
+	NextAvailableTime *time.Time `json:"next_available_time,omitempty"`
 }

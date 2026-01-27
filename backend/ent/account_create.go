@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
+	"github.com/Wei-Shaw/sub2api/internal/model"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -335,6 +336,40 @@ func (_c *AccountCreate) SetNillableSessionWindowStatus(v *string) *AccountCreat
 	return _c
 }
 
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (_c *AccountCreate) SetScheduleEnabled(v bool) *AccountCreate {
+	_c.mutation.SetScheduleEnabled(v)
+	return _c
+}
+
+// SetNillableScheduleEnabled sets the "schedule_enabled" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableScheduleEnabled(v *bool) *AccountCreate {
+	if v != nil {
+		_c.SetScheduleEnabled(*v)
+	}
+	return _c
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (_c *AccountCreate) SetScheduleTimezone(v string) *AccountCreate {
+	_c.mutation.SetScheduleTimezone(v)
+	return _c
+}
+
+// SetNillableScheduleTimezone sets the "schedule_timezone" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableScheduleTimezone(v *string) *AccountCreate {
+	if v != nil {
+		_c.SetScheduleTimezone(*v)
+	}
+	return _c
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (_c *AccountCreate) SetScheduleRules(v []model.ScheduleRule) *AccountCreate {
+	_c.mutation.SetScheduleRules(v)
+	return _c
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (_c *AccountCreate) AddGroupIDs(ids ...int64) *AccountCreate {
 	_c.mutation.AddGroupIDs(ids...)
@@ -459,6 +494,14 @@ func (_c *AccountCreate) defaults() error {
 		v := account.DefaultSchedulable
 		_c.mutation.SetSchedulable(v)
 	}
+	if _, ok := _c.mutation.ScheduleEnabled(); !ok {
+		v := account.DefaultScheduleEnabled
+		_c.mutation.SetScheduleEnabled(v)
+	}
+	if _, ok := _c.mutation.ScheduleTimezone(); !ok {
+		v := account.DefaultScheduleTimezone
+		_c.mutation.SetScheduleTimezone(v)
+	}
 	return nil
 }
 
@@ -526,6 +569,17 @@ func (_c *AccountCreate) check() error {
 	if v, ok := _c.mutation.SessionWindowStatus(); ok {
 		if err := account.SessionWindowStatusValidator(v); err != nil {
 			return &ValidationError{Name: "session_window_status", err: fmt.Errorf(`ent: validator failed for field "Account.session_window_status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.ScheduleEnabled(); !ok {
+		return &ValidationError{Name: "schedule_enabled", err: errors.New(`ent: missing required field "Account.schedule_enabled"`)}
+	}
+	if _, ok := _c.mutation.ScheduleTimezone(); !ok {
+		return &ValidationError{Name: "schedule_timezone", err: errors.New(`ent: missing required field "Account.schedule_timezone"`)}
+	}
+	if v, ok := _c.mutation.ScheduleTimezone(); ok {
+		if err := account.ScheduleTimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "schedule_timezone", err: fmt.Errorf(`ent: validator failed for field "Account.schedule_timezone": %w`, err)}
 		}
 	}
 	return nil
@@ -650,6 +704,18 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.SessionWindowStatus(); ok {
 		_spec.SetField(account.FieldSessionWindowStatus, field.TypeString, value)
 		_node.SessionWindowStatus = &value
+	}
+	if value, ok := _c.mutation.ScheduleEnabled(); ok {
+		_spec.SetField(account.FieldScheduleEnabled, field.TypeBool, value)
+		_node.ScheduleEnabled = value
+	}
+	if value, ok := _c.mutation.ScheduleTimezone(); ok {
+		_spec.SetField(account.FieldScheduleTimezone, field.TypeString, value)
+		_node.ScheduleTimezone = value
+	}
+	if value, ok := _c.mutation.ScheduleRules(); ok {
+		_spec.SetField(account.FieldScheduleRules, field.TypeJSON, value)
+		_node.ScheduleRules = value
 	}
 	if nodes := _c.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1131,6 +1197,48 @@ func (u *AccountUpsert) UpdateSessionWindowStatus() *AccountUpsert {
 // ClearSessionWindowStatus clears the value of the "session_window_status" field.
 func (u *AccountUpsert) ClearSessionWindowStatus() *AccountUpsert {
 	u.SetNull(account.FieldSessionWindowStatus)
+	return u
+}
+
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (u *AccountUpsert) SetScheduleEnabled(v bool) *AccountUpsert {
+	u.Set(account.FieldScheduleEnabled, v)
+	return u
+}
+
+// UpdateScheduleEnabled sets the "schedule_enabled" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateScheduleEnabled() *AccountUpsert {
+	u.SetExcluded(account.FieldScheduleEnabled)
+	return u
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (u *AccountUpsert) SetScheduleTimezone(v string) *AccountUpsert {
+	u.Set(account.FieldScheduleTimezone, v)
+	return u
+}
+
+// UpdateScheduleTimezone sets the "schedule_timezone" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateScheduleTimezone() *AccountUpsert {
+	u.SetExcluded(account.FieldScheduleTimezone)
+	return u
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (u *AccountUpsert) SetScheduleRules(v []model.ScheduleRule) *AccountUpsert {
+	u.Set(account.FieldScheduleRules, v)
+	return u
+}
+
+// UpdateScheduleRules sets the "schedule_rules" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateScheduleRules() *AccountUpsert {
+	u.SetExcluded(account.FieldScheduleRules)
+	return u
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (u *AccountUpsert) ClearScheduleRules() *AccountUpsert {
+	u.SetNull(account.FieldScheduleRules)
 	return u
 }
 
@@ -1617,6 +1725,55 @@ func (u *AccountUpsertOne) UpdateSessionWindowStatus() *AccountUpsertOne {
 func (u *AccountUpsertOne) ClearSessionWindowStatus() *AccountUpsertOne {
 	return u.Update(func(s *AccountUpsert) {
 		s.ClearSessionWindowStatus()
+	})
+}
+
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (u *AccountUpsertOne) SetScheduleEnabled(v bool) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleEnabled(v)
+	})
+}
+
+// UpdateScheduleEnabled sets the "schedule_enabled" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateScheduleEnabled() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleEnabled()
+	})
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (u *AccountUpsertOne) SetScheduleTimezone(v string) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleTimezone(v)
+	})
+}
+
+// UpdateScheduleTimezone sets the "schedule_timezone" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateScheduleTimezone() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleTimezone()
+	})
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (u *AccountUpsertOne) SetScheduleRules(v []model.ScheduleRule) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleRules(v)
+	})
+}
+
+// UpdateScheduleRules sets the "schedule_rules" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateScheduleRules() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleRules()
+	})
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (u *AccountUpsertOne) ClearScheduleRules() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearScheduleRules()
 	})
 }
 
@@ -2269,6 +2426,55 @@ func (u *AccountUpsertBulk) UpdateSessionWindowStatus() *AccountUpsertBulk {
 func (u *AccountUpsertBulk) ClearSessionWindowStatus() *AccountUpsertBulk {
 	return u.Update(func(s *AccountUpsert) {
 		s.ClearSessionWindowStatus()
+	})
+}
+
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (u *AccountUpsertBulk) SetScheduleEnabled(v bool) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleEnabled(v)
+	})
+}
+
+// UpdateScheduleEnabled sets the "schedule_enabled" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateScheduleEnabled() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleEnabled()
+	})
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (u *AccountUpsertBulk) SetScheduleTimezone(v string) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleTimezone(v)
+	})
+}
+
+// UpdateScheduleTimezone sets the "schedule_timezone" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateScheduleTimezone() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleTimezone()
+	})
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (u *AccountUpsertBulk) SetScheduleRules(v []model.ScheduleRule) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetScheduleRules(v)
+	})
+}
+
+// UpdateScheduleRules sets the "schedule_rules" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateScheduleRules() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateScheduleRules()
+	})
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (u *AccountUpsertBulk) ClearScheduleRules() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearScheduleRules()
 	})
 }
 

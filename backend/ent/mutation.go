@@ -29,6 +29,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/internal/model"
 )
 
 const (
@@ -1204,6 +1205,10 @@ type AccountMutation struct {
 	session_window_start  *time.Time
 	session_window_end    *time.Time
 	session_window_status *string
+	schedule_enabled      *bool
+	schedule_timezone     *string
+	schedule_rules        *[]model.ScheduleRule
+	appendschedule_rules  []model.ScheduleRule
 	clearedFields         map[string]struct{}
 	groups                map[int64]struct{}
 	removedgroups         map[int64]struct{}
@@ -2432,6 +2437,143 @@ func (m *AccountMutation) ResetSessionWindowStatus() {
 	delete(m.clearedFields, account.FieldSessionWindowStatus)
 }
 
+// SetScheduleEnabled sets the "schedule_enabled" field.
+func (m *AccountMutation) SetScheduleEnabled(b bool) {
+	m.schedule_enabled = &b
+}
+
+// ScheduleEnabled returns the value of the "schedule_enabled" field in the mutation.
+func (m *AccountMutation) ScheduleEnabled() (r bool, exists bool) {
+	v := m.schedule_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScheduleEnabled returns the old "schedule_enabled" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldScheduleEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScheduleEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScheduleEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScheduleEnabled: %w", err)
+	}
+	return oldValue.ScheduleEnabled, nil
+}
+
+// ResetScheduleEnabled resets all changes to the "schedule_enabled" field.
+func (m *AccountMutation) ResetScheduleEnabled() {
+	m.schedule_enabled = nil
+}
+
+// SetScheduleTimezone sets the "schedule_timezone" field.
+func (m *AccountMutation) SetScheduleTimezone(s string) {
+	m.schedule_timezone = &s
+}
+
+// ScheduleTimezone returns the value of the "schedule_timezone" field in the mutation.
+func (m *AccountMutation) ScheduleTimezone() (r string, exists bool) {
+	v := m.schedule_timezone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScheduleTimezone returns the old "schedule_timezone" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldScheduleTimezone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScheduleTimezone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScheduleTimezone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScheduleTimezone: %w", err)
+	}
+	return oldValue.ScheduleTimezone, nil
+}
+
+// ResetScheduleTimezone resets all changes to the "schedule_timezone" field.
+func (m *AccountMutation) ResetScheduleTimezone() {
+	m.schedule_timezone = nil
+}
+
+// SetScheduleRules sets the "schedule_rules" field.
+func (m *AccountMutation) SetScheduleRules(mr []model.ScheduleRule) {
+	m.schedule_rules = &mr
+	m.appendschedule_rules = nil
+}
+
+// ScheduleRules returns the value of the "schedule_rules" field in the mutation.
+func (m *AccountMutation) ScheduleRules() (r []model.ScheduleRule, exists bool) {
+	v := m.schedule_rules
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScheduleRules returns the old "schedule_rules" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldScheduleRules(ctx context.Context) (v []model.ScheduleRule, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScheduleRules is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScheduleRules requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScheduleRules: %w", err)
+	}
+	return oldValue.ScheduleRules, nil
+}
+
+// AppendScheduleRules adds mr to the "schedule_rules" field.
+func (m *AccountMutation) AppendScheduleRules(mr []model.ScheduleRule) {
+	m.appendschedule_rules = append(m.appendschedule_rules, mr...)
+}
+
+// AppendedScheduleRules returns the list of values that were appended to the "schedule_rules" field in this mutation.
+func (m *AccountMutation) AppendedScheduleRules() ([]model.ScheduleRule, bool) {
+	if len(m.appendschedule_rules) == 0 {
+		return nil, false
+	}
+	return m.appendschedule_rules, true
+}
+
+// ClearScheduleRules clears the value of the "schedule_rules" field.
+func (m *AccountMutation) ClearScheduleRules() {
+	m.schedule_rules = nil
+	m.appendschedule_rules = nil
+	m.clearedFields[account.FieldScheduleRules] = struct{}{}
+}
+
+// ScheduleRulesCleared returns if the "schedule_rules" field was cleared in this mutation.
+func (m *AccountMutation) ScheduleRulesCleared() bool {
+	_, ok := m.clearedFields[account.FieldScheduleRules]
+	return ok
+}
+
+// ResetScheduleRules resets all changes to the "schedule_rules" field.
+func (m *AccountMutation) ResetScheduleRules() {
+	m.schedule_rules = nil
+	m.appendschedule_rules = nil
+	delete(m.clearedFields, account.FieldScheduleRules)
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by ids.
 func (m *AccountMutation) AddGroupIDs(ids ...int64) {
 	if m.groups == nil {
@@ -2601,7 +2743,7 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 25)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, account.FieldCreatedAt)
 	}
@@ -2677,6 +2819,15 @@ func (m *AccountMutation) Fields() []string {
 	if m.session_window_status != nil {
 		fields = append(fields, account.FieldSessionWindowStatus)
 	}
+	if m.schedule_enabled != nil {
+		fields = append(fields, account.FieldScheduleEnabled)
+	}
+	if m.schedule_timezone != nil {
+		fields = append(fields, account.FieldScheduleTimezone)
+	}
+	if m.schedule_rules != nil {
+		fields = append(fields, account.FieldScheduleRules)
+	}
 	return fields
 }
 
@@ -2735,6 +2886,12 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.SessionWindowEnd()
 	case account.FieldSessionWindowStatus:
 		return m.SessionWindowStatus()
+	case account.FieldScheduleEnabled:
+		return m.ScheduleEnabled()
+	case account.FieldScheduleTimezone:
+		return m.ScheduleTimezone()
+	case account.FieldScheduleRules:
+		return m.ScheduleRules()
 	}
 	return nil, false
 }
@@ -2794,6 +2951,12 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldSessionWindowEnd(ctx)
 	case account.FieldSessionWindowStatus:
 		return m.OldSessionWindowStatus(ctx)
+	case account.FieldScheduleEnabled:
+		return m.OldScheduleEnabled(ctx)
+	case account.FieldScheduleTimezone:
+		return m.OldScheduleTimezone(ctx)
+	case account.FieldScheduleRules:
+		return m.OldScheduleRules(ctx)
 	}
 	return nil, fmt.Errorf("unknown Account field %s", name)
 }
@@ -2978,6 +3141,27 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSessionWindowStatus(v)
 		return nil
+	case account.FieldScheduleEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScheduleEnabled(v)
+		return nil
+	case account.FieldScheduleTimezone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScheduleTimezone(v)
+		return nil
+	case account.FieldScheduleRules:
+		v, ok := value.([]model.ScheduleRule)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScheduleRules(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)
 }
@@ -3083,6 +3267,9 @@ func (m *AccountMutation) ClearedFields() []string {
 	if m.FieldCleared(account.FieldSessionWindowStatus) {
 		fields = append(fields, account.FieldSessionWindowStatus)
 	}
+	if m.FieldCleared(account.FieldScheduleRules) {
+		fields = append(fields, account.FieldScheduleRules)
+	}
 	return fields
 }
 
@@ -3132,6 +3319,9 @@ func (m *AccountMutation) ClearField(name string) error {
 		return nil
 	case account.FieldSessionWindowStatus:
 		m.ClearSessionWindowStatus()
+		return nil
+	case account.FieldScheduleRules:
+		m.ClearScheduleRules()
 		return nil
 	}
 	return fmt.Errorf("unknown Account nullable field %s", name)
@@ -3215,6 +3405,15 @@ func (m *AccountMutation) ResetField(name string) error {
 		return nil
 	case account.FieldSessionWindowStatus:
 		m.ResetSessionWindowStatus()
+		return nil
+	case account.FieldScheduleEnabled:
+		m.ResetScheduleEnabled()
+		return nil
+	case account.FieldScheduleTimezone:
+		m.ResetScheduleTimezone()
+		return nil
+	case account.FieldScheduleRules:
+		m.ResetScheduleRules()
 		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)

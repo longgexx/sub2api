@@ -95,6 +95,11 @@ type CreateAccountRequest struct {
 	ExpiresAt               *int64         `json:"expires_at"`
 	AutoPauseOnExpired      *bool          `json:"auto_pause_on_expired"`
 	ConfirmMixedChannelRisk *bool          `json:"confirm_mixed_channel_risk"` // 用户确认混合渠道风险
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	ScheduleEnabled  *bool                   `json:"schedule_enabled"`
+	ScheduleTimezone string                  `json:"schedule_timezone"`
+	ScheduleRules    []dto.ScheduleRuleInput `json:"schedule_rules"`
 }
 
 // UpdateAccountRequest represents update account request
@@ -114,6 +119,11 @@ type UpdateAccountRequest struct {
 	ExpiresAt               *int64         `json:"expires_at"`
 	AutoPauseOnExpired      *bool          `json:"auto_pause_on_expired"`
 	ConfirmMixedChannelRisk *bool          `json:"confirm_mixed_channel_risk"` // 用户确认混合渠道风险
+
+	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
+	ScheduleEnabled  *bool                   `json:"schedule_enabled"`
+	ScheduleTimezone *string                 `json:"schedule_timezone"`
+	ScheduleRules    *[]dto.ScheduleRuleInput `json:"schedule_rules"`
 }
 
 // BulkUpdateAccountsRequest represents the payload for bulk editing accounts
@@ -290,6 +300,28 @@ func (h *AccountHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// 验证时间段调度配置
+	scheduleEnabled := req.ScheduleEnabled != nil && *req.ScheduleEnabled
+	scheduleTimezone := req.ScheduleTimezone
+	if scheduleTimezone == "" {
+		scheduleTimezone = "UTC"
+	}
+	if err := validateScheduleConfig(req.Platform, req.Type, scheduleEnabled, scheduleTimezone, req.ScheduleRules); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// 转换调度规则
+	var scheduleRules []service.ScheduleRule
+	if scheduleEnabled {
+		rules, err := convertToScheduleRules(req.ScheduleRules)
+		if err != nil {
+			response.BadRequest(c, "Invalid schedule rules: "+err.Error())
+			return
+		}
+		scheduleRules = rules
+	}
+
 	// 确定是否跳过混合渠道检查
 	skipCheck := req.ConfirmMixedChannelRisk != nil && *req.ConfirmMixedChannelRisk
 
@@ -308,6 +340,9 @@ func (h *AccountHandler) Create(c *gin.Context) {
 		ExpiresAt:             req.ExpiresAt,
 		AutoPauseOnExpired:    req.AutoPauseOnExpired,
 		SkipMixedChannelCheck: skipCheck,
+		ScheduleEnabled:       req.ScheduleEnabled,
+		ScheduleTimezone:      scheduleTimezone,
+		ScheduleRules:         scheduleRules,
 	})
 	if err != nil {
 		// 检查是否为混合渠道错误
@@ -354,6 +389,62 @@ func (h *AccountHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// 获取现有账号信息以验证调度配置
+	existingAccount, err := h.adminService.GetAccount(c.Request.Context(), accountID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	// 验证时间段调度配置（如果提供了相关字段）
+	if req.ScheduleEnabled != nil || req.ScheduleRules != nil {
+		// 确定最终的启用状态
+		scheduleEnabled := existingAccount.ScheduleEnabled
+		if req.ScheduleEnabled != nil {
+			scheduleEnabled = *req.ScheduleEnabled
+		}
+
+		// 确定最终的时区
+		scheduleTimezone := existingAccount.ScheduleTimezone
+		if req.ScheduleTimezone != nil {
+			scheduleTimezone = *req.ScheduleTimezone
+		}
+		if scheduleTimezone == "" {
+			scheduleTimezone = "UTC"
+		}
+
+		// 确定最终的规则
+		var rules []dto.ScheduleRuleInput
+		if req.ScheduleRules != nil {
+			rules = *req.ScheduleRules
+		} else if scheduleEnabled && len(existingAccount.ScheduleRules) > 0 {
+			// 如果启用但没有提供新规则，使用现有规则进行验证
+			for _, r := range existingAccount.ScheduleRules {
+				rules = append(rules, dto.ScheduleRuleInput{
+					Weekdays:  r.Weekdays,
+					StartTime: service.MinuteToTimeStr(r.StartMinute),
+					EndTime:   service.MinuteToTimeStr(r.EndMinute),
+				})
+			}
+		}
+
+		if err := validateScheduleConfig(existingAccount.Platform, existingAccount.Type, scheduleEnabled, scheduleTimezone, rules); err != nil {
+			response.BadRequest(c, err.Error())
+			return
+		}
+	}
+
+	// 转换调度规则（如果提供）
+	var scheduleRules *[]service.ScheduleRule
+	if req.ScheduleRules != nil {
+		rules, err := convertToScheduleRules(*req.ScheduleRules)
+		if err != nil {
+			response.BadRequest(c, "Invalid schedule rules: "+err.Error())
+			return
+		}
+		scheduleRules = &rules
+	}
+
 	// 确定是否跳过混合渠道检查
 	skipCheck := req.ConfirmMixedChannelRisk != nil && *req.ConfirmMixedChannelRisk
 
@@ -372,6 +463,9 @@ func (h *AccountHandler) Update(c *gin.Context) {
 		ExpiresAt:             req.ExpiresAt,
 		AutoPauseOnExpired:    req.AutoPauseOnExpired,
 		SkipMixedChannelCheck: skipCheck,
+		ScheduleEnabled:       req.ScheduleEnabled,
+		ScheduleTimezone:      req.ScheduleTimezone,
+		ScheduleRules:         scheduleRules,
 	})
 	if err != nil {
 		// 检查是否为混合渠道错误
@@ -1439,4 +1533,90 @@ func (h *AccountHandler) BatchRefreshTier(c *gin.Context) {
 	}
 
 	response.Success(c, results)
+}
+
+// ========== Schedule Configuration Helpers ==========
+
+// validateScheduleConfig 验证时间段调度配置
+// 仅 Anthropic OAuth/SetupToken 账号允许配置
+func validateScheduleConfig(platform, accountType string, enabled bool, tz string, rules []dto.ScheduleRuleInput) error {
+	// 检查账号类型是否支持调度配置
+	isAnthropicOAuth := platform == service.PlatformAnthropic &&
+		(accountType == service.AccountTypeOAuth || accountType == service.AccountTypeSetupToken)
+
+	if !isAnthropicOAuth {
+		if enabled || len(rules) > 0 {
+			return errors.New("time-based scheduling is only available for Anthropic OAuth/SetupToken accounts")
+		}
+		return nil
+	}
+
+	if !enabled {
+		return nil // 未启用，无需验证
+	}
+
+	if len(rules) == 0 {
+		return errors.New("schedule_rules must have at least one rule when schedule_enabled is true")
+	}
+
+	// 验证时区
+	if _, err := time.LoadLocation(tz); err != nil {
+		return errors.New("invalid timezone: " + tz)
+	}
+
+	// 验证规则
+	for i, rule := range rules {
+		if len(rule.Weekdays) == 0 {
+			return errors.New("rule " + strconv.Itoa(i) + ": weekdays cannot be empty")
+		}
+
+		// 验证 weekdays 去重和范围
+		seen := make(map[int]bool)
+		for _, wd := range rule.Weekdays {
+			if wd < 0 || wd > 6 {
+				return errors.New("rule " + strconv.Itoa(i) + ": invalid weekday " + strconv.Itoa(wd) + " (must be 0-6)")
+			}
+			if seen[wd] {
+				return errors.New("rule " + strconv.Itoa(i) + ": duplicate weekday " + strconv.Itoa(wd))
+			}
+			seen[wd] = true
+		}
+
+		// 解析并验证时间格式
+		startMinute, err := service.ParseTimeToMinute(rule.StartTime)
+		if err != nil {
+			return errors.New("rule " + strconv.Itoa(i) + ": invalid start_time format '" + rule.StartTime + "' (expected HH:MM)")
+		}
+		endMinute, err := service.ParseTimeToMinute(rule.EndTime)
+		if err != nil {
+			return errors.New("rule " + strconv.Itoa(i) + ": invalid end_time format '" + rule.EndTime + "' (expected HH:MM)")
+		}
+
+		// 不允许 start == end（会导致 0 时长窗口）
+		if startMinute == endMinute {
+			return errors.New("rule " + strconv.Itoa(i) + ": start_time and end_time cannot be the same")
+		}
+	}
+
+	return nil
+}
+
+// convertToScheduleRules 将 API 输入转换为内部模型
+func convertToScheduleRules(inputs []dto.ScheduleRuleInput) ([]service.ScheduleRule, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+
+	rules := make([]service.ScheduleRule, len(inputs))
+	for i, input := range inputs {
+		startMinute, _ := service.ParseTimeToMinute(input.StartTime) // 已验证
+		endMinute, _ := service.ParseTimeToMinute(input.EndTime)     // 已验证
+
+		rules[i] = service.ScheduleRule{
+			Weekdays:    input.Weekdays,
+			StartMinute: startMinute,
+			EndMinute:   endMinute,
+		}
+	}
+	return rules, nil
 }

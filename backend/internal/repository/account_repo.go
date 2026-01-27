@@ -117,6 +117,12 @@ func (r *accountRepository) Create(ctx context.Context, account *service.Account
 	if account.SessionWindowStatus != "" {
 		builder.SetSessionWindowStatus(account.SessionWindowStatus)
 	}
+	// 时间段调度字段
+	builder.SetScheduleEnabled(account.ScheduleEnabled)
+	builder.SetScheduleTimezone(account.ScheduleTimezone)
+	if len(account.ScheduleRules) > 0 {
+		builder.SetScheduleRules(account.ScheduleRules)
+	}
 
 	created, err := builder.Save(ctx)
 	if err != nil {
@@ -352,6 +358,14 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 	}
 	if account.Notes == nil {
 		builder.ClearNotes()
+	}
+	// 时间段调度字段
+	builder.SetScheduleEnabled(account.ScheduleEnabled)
+	builder.SetScheduleTimezone(account.ScheduleTimezone)
+	if len(account.ScheduleRules) > 0 {
+		builder.SetScheduleRules(account.ScheduleRules)
+	} else {
+		builder.ClearScheduleRules()
 	}
 
 	updated, err := builder.Save(ctx)
@@ -1518,6 +1532,9 @@ func accountEntityToService(m *dbent.Account) *service.Account {
 		SessionWindowStart:  m.SessionWindowStart,
 		SessionWindowEnd:    m.SessionWindowEnd,
 		SessionWindowStatus: derefString(m.SessionWindowStatus),
+		ScheduleEnabled:     m.ScheduleEnabled,
+		ScheduleTimezone:    m.ScheduleTimezone,
+		ScheduleRules:       m.ScheduleRules,
 	}
 }
 

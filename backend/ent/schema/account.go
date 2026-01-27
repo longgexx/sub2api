@@ -4,6 +4,7 @@ package schema
 
 import (
 	"github.com/Wei-Shaw/sub2api/ent/schema/mixins"
+	"github.com/Wei-Shaw/sub2api/internal/model"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"entgo.io/ent"
@@ -178,6 +179,26 @@ func (Account) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			MaxLen(20),
+
+		// ========== 时间段调度相关字段 ==========
+		// 仅对 Anthropic OAuth/SetupToken 账号生效
+
+		// schedule_enabled: 是否启用时间段调度
+		field.Bool("schedule_enabled").
+			Default(false).
+			Comment("Enable time-based scheduling for this account (only for Anthropic OAuth/SetupToken)"),
+
+		// schedule_timezone: 调度时区
+		field.String("schedule_timezone").
+			Default("UTC").
+			MaxLen(50).
+			Comment("Timezone for schedule rules (e.g., Asia/Shanghai, UTC)"),
+
+		// schedule_rules: 调度规则（JSONB）
+		field.JSON("schedule_rules", []model.ScheduleRule{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("Time-based scheduling rules"),
 	}
 }
 
@@ -214,5 +235,6 @@ func (Account) Indexes() []ent.Index {
 		index.Fields("rate_limit_reset_at"), // 筛选速率限制解除时间
 		index.Fields("overload_until"),      // 筛选过载账户
 		index.Fields("deleted_at"),          // 软删除查询优化
+		index.Fields("schedule_enabled"),    // 筛选启用时间段调度的账户
 	}
 }
