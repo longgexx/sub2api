@@ -121,8 +121,8 @@ type UpdateAccountRequest struct {
 	ConfirmMixedChannelRisk *bool          `json:"confirm_mixed_channel_risk"` // 用户确认混合渠道风险
 
 	// 时间段调度配置（仅 Anthropic OAuth/SetupToken 账号有效）
-	ScheduleEnabled  *bool                   `json:"schedule_enabled"`
-	ScheduleTimezone *string                 `json:"schedule_timezone"`
+	ScheduleEnabled  *bool                    `json:"schedule_enabled"`
+	ScheduleTimezone *string                  `json:"schedule_timezone"`
 	ScheduleRules    *[]dto.ScheduleRuleInput `json:"schedule_rules"`
 }
 

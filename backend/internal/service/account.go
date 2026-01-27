@@ -42,8 +42,10 @@ type ScheduleCheckResult struct {
 var timezoneCache sync.Map
 
 func loadTimezone(tz string) (*time.Location, error) {
-	if loc, ok := timezoneCache.Load(tz); ok {
-		return loc.(*time.Location), nil
+	if cached, ok := timezoneCache.Load(tz); ok {
+		if loc, ok := cached.(*time.Location); ok {
+			return loc, nil
+		}
 	}
 	loc, err := time.LoadLocation(tz)
 	if err != nil {

@@ -168,11 +168,11 @@ func TestIsCrossDay(t *testing.T) {
 		rule     ScheduleRule
 		expected bool
 	}{
-		{ScheduleRule{StartMinute: 540, EndMinute: 1080}, false},  // 09:00-18:00
-		{ScheduleRule{StartMinute: 1320, EndMinute: 120}, true},   // 22:00-02:00
-		{ScheduleRule{StartMinute: 0, EndMinute: 0}, true},        // 00:00-00:00 (跨天)
-		{ScheduleRule{StartMinute: 1439, EndMinute: 60}, true},    // 23:59-01:00
-		{ScheduleRule{StartMinute: 60, EndMinute: 1439}, false},   // 01:00-23:59
+		{ScheduleRule{StartMinute: 540, EndMinute: 1080}, false}, // 09:00-18:00
+		{ScheduleRule{StartMinute: 1320, EndMinute: 120}, true},  // 22:00-02:00
+		{ScheduleRule{StartMinute: 0, EndMinute: 0}, true},       // 00:00-00:00 (跨天)
+		{ScheduleRule{StartMinute: 1439, EndMinute: 60}, true},   // 23:59-01:00
+		{ScheduleRule{StartMinute: 60, EndMinute: 1439}, false},  // 01:00-23:59
 	}
 
 	for _, tt := range tests {
