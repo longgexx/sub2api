@@ -1373,6 +1373,182 @@
             </button>
           </div>
         </div>
+
+        <!-- Time-Based Scheduling -->
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+          <div class="mb-3 flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.schedule.title') }}</label>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('admin.accounts.quotaControl.schedule.hint') }}
+              </p>
+            </div>
+            <button
+              type="button"
+              @click="scheduleEnabled = !scheduleEnabled"
+              :class="[
+                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+                scheduleEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              ]"
+            >
+              <span
+                :class="[
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  scheduleEnabled ? 'translate-x-5' : 'translate-x-0'
+                ]"
+              />
+            </button>
+          </div>
+
+          <div v-if="scheduleEnabled" class="space-y-4">
+            <!-- Timezone selection -->
+            <div>
+              <label class="input-label">{{ t('admin.accounts.quotaControl.schedule.timezone') }}</label>
+              <Select v-model="scheduleTimezone" :options="timezoneOptions" searchable />
+              <p class="input-hint">{{ t('admin.accounts.quotaControl.schedule.timezoneHint') }}</p>
+            </div>
+
+            <!-- Notice -->
+            <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+              <p class="text-xs text-blue-700 dark:text-blue-400">
+                <Icon name="infoCircle" size="sm" class="mr-1 inline" :stroke-width="2" />
+                {{ t('admin.accounts.quotaControl.schedule.notice') }}
+              </p>
+            </div>
+
+            <!-- Presets -->
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="preset in schedulePresets"
+                :key="preset.label"
+                type="button"
+                @click="addScheduleRule(preset.rule)"
+                class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-300 dark:hover:bg-dark-500"
+              >
+                + {{ preset.label }}
+              </button>
+            </div>
+
+            <!-- Rules list -->
+            <div v-if="scheduleRules.length > 0" class="space-y-3">
+              <div
+                v-for="(rule, index) in scheduleRules"
+                :key="index"
+                class="rounded-lg border border-gray-200 p-3 dark:border-dark-600"
+              >
+                <!-- Rule header -->
+                <div class="mb-3 flex items-center justify-between">
+                  <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {{ t('admin.accounts.quotaControl.schedule.ruleIndex', { index: index + 1 }) }}
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      :disabled="index === 0"
+                      @click="moveScheduleRule(index, -1)"
+                      class="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-500 dark:hover:text-gray-300"
+                    >
+                      <Icon name="chevronUp" size="sm" :stroke-width="2" />
+                    </button>
+                    <button
+                      type="button"
+                      :disabled="index === scheduleRules.length - 1"
+                      @click="moveScheduleRule(index, 1)"
+                      class="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-500 dark:hover:text-gray-300"
+                    >
+                      <Icon name="chevronDown" size="sm" :stroke-width="2" />
+                    </button>
+                    <button
+                      type="button"
+                      @click="removeScheduleRule(index)"
+                      class="rounded p-1 text-red-500 transition-colors hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <Icon name="x" size="sm" :stroke-width="2" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Rule form -->
+                <div class="space-y-3">
+                  <!-- Weekdays -->
+                  <div>
+                    <div class="mb-2 flex items-center justify-between">
+                      <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.schedule.weekdays.label') }}</label>
+                      <div class="flex gap-2 text-xs">
+                        <button
+                          type="button"
+                          @click="selectAllWeekdays(rule)"
+                          class="text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {{ t('admin.accounts.quotaControl.schedule.weekdays.all') }}
+                        </button>
+                        <span class="text-gray-300 dark:text-gray-600">|</span>
+                        <button
+                          type="button"
+                          @click="selectWorkdays(rule)"
+                          class="text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {{ t('admin.accounts.quotaControl.schedule.weekdays.workdays') }}
+                        </button>
+                        <span class="text-gray-300 dark:text-gray-600">|</span>
+                        <button
+                          type="button"
+                          @click="selectWeekends(rule)"
+                          class="text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {{ t('admin.accounts.quotaControl.schedule.weekdays.weekends') }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="day in weekdayOptions"
+                        :key="day.value"
+                        type="button"
+                        @click="toggleWeekday(rule, day.value)"
+                        :class="[
+                          'min-w-[3rem] rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          rule.weekdays.includes(day.value)
+                            ? 'bg-primary-100 text-primary-700 ring-1 ring-primary-500 dark:bg-primary-900/30 dark:text-primary-400 dark:ring-primary-600'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                        ]"
+                      >
+                        {{ t(day.label) }}
+                      </button>
+                    </div>
+                    <p class="input-hint mt-1">{{ t('admin.accounts.quotaControl.schedule.weekdays.hint') }}</p>
+                  </div>
+
+                  <!-- Time range -->
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="input-label">{{ t('admin.accounts.quotaControl.schedule.time.start') }}</label>
+                      <input v-model="rule.start_time" type="time" class="input" placeholder="09:00" />
+                    </div>
+                    <div>
+                      <label class="input-label">{{ t('admin.accounts.quotaControl.schedule.time.end') }}</label>
+                      <input v-model="rule.end_time" type="time" class="input" placeholder="18:00" />
+                    </div>
+                  </div>
+                  <p class="input-hint">{{ t('admin.accounts.quotaControl.schedule.time.hint') }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add rule button -->
+            <button
+              type="button"
+              @click="addScheduleRule()"
+              class="w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-sm text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+            >
+              <svg class="mr-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              {{ t('admin.accounts.quotaControl.schedule.addRule') }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -1924,6 +2100,12 @@ interface TempUnschedRuleForm {
   description: string
 }
 
+interface ScheduleRuleForm {
+  weekdays: number[]
+  start_time: string
+  end_time: string
+}
+
 // State
 const step = ref(1)
 const submitting = ref(false)
@@ -1956,6 +2138,11 @@ const maxSessions = ref<number | null>(null)
 const sessionIdleTimeout = ref<number | null>(null)
 const tlsFingerprintEnabled = ref(false)
 const sessionIdMaskingEnabled = ref(false)
+
+// Schedule control state (Anthropic OAuth/SetupToken only)
+const scheduleEnabled = ref(false)
+const scheduleTimezone = ref('Asia/Shanghai')
+const scheduleRules = ref<ScheduleRuleForm[]>([])
 
 // Gemini tier selection (used as fallback when auto-detection is unavailable/fails)
 const geminiTierGoogleOne = ref<'google_one_free' | 'google_ai_pro' | 'google_ai_ultra'>('google_one_free')
@@ -2021,6 +2208,165 @@ const tempUnschedPresets = computed(() => [
     }
   }
 ])
+
+// Schedule control helper functions
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+function isValidTime(time: string): boolean {
+  if (!time || typeof time !== 'string') return false
+  const match = time.match(/^([01]?[0-9]|2[0-3]):([0-5][0-9])$/)
+  return match !== null
+}
+
+// Timezone options
+const timezoneOptions = [
+  { value: 'UTC', label: 'UTC' },
+  { value: 'Asia/Shanghai', label: 'Asia/Shanghai (UTC+8)' },
+  { value: 'America/New_York', label: 'America/New_York (UTC-5/-4)' },
+  { value: 'Europe/London', label: 'Europe/London (UTC+0/+1)' },
+  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles (UTC-8/-7)' },
+  { value: 'Europe/Paris', label: 'Europe/Paris (UTC+1/+2)' },
+  { value: 'Australia/Sydney', label: 'Australia/Sydney (UTC+10/+11)' }
+]
+
+// Weekday options
+const weekdayOptions = [
+  { value: 1, label: 'admin.accounts.quotaControl.schedule.weekdays.monday' },
+  { value: 2, label: 'admin.accounts.quotaControl.schedule.weekdays.tuesday' },
+  { value: 3, label: 'admin.accounts.quotaControl.schedule.weekdays.wednesday' },
+  { value: 4, label: 'admin.accounts.quotaControl.schedule.weekdays.thursday' },
+  { value: 5, label: 'admin.accounts.quotaControl.schedule.weekdays.friday' },
+  { value: 6, label: 'admin.accounts.quotaControl.schedule.weekdays.saturday' },
+  { value: 0, label: 'admin.accounts.quotaControl.schedule.weekdays.sunday' }
+]
+
+// Schedule presets
+const schedulePresets = computed(() => [
+  {
+    label: t('admin.accounts.quotaControl.schedule.presets.businessHours'),
+    rule: {
+      weekdays: [1, 2, 3, 4, 5],
+      start_time: '09:00',
+      end_time: '18:00'
+    }
+  },
+  {
+    label: t('admin.accounts.quotaControl.schedule.presets.nightTime'),
+    rule: {
+      weekdays: [0, 1, 2, 3, 4, 5, 6],
+      start_time: '22:00',
+      end_time: '06:00'
+    }
+  },
+  {
+    label: t('admin.accounts.quotaControl.schedule.presets.weekend'),
+    rule: {
+      weekdays: [0, 6],
+      start_time: '00:00',
+      end_time: '23:59'
+    }
+  }
+])
+
+// Schedule rule operations
+const addScheduleRule = (preset?: ScheduleRuleForm) => {
+  if (preset) {
+    scheduleRules.value.push({ ...preset })
+    return
+  }
+  scheduleRules.value.push({
+    weekdays: [],
+    start_time: '09:00',
+    end_time: '18:00'
+  })
+}
+
+const removeScheduleRule = (index: number) => {
+  scheduleRules.value.splice(index, 1)
+}
+
+const moveScheduleRule = (index: number, direction: number) => {
+  const target = index + direction
+  if (target < 0 || target >= scheduleRules.value.length) return
+  const rules = scheduleRules.value
+  ;[rules[index], rules[target]] = [rules[target], rules[index]]
+}
+
+const toggleWeekday = (rule: ScheduleRuleForm, day: number) => {
+  const index = rule.weekdays.indexOf(day)
+  if (index === -1) {
+    rule.weekdays.push(day)
+    rule.weekdays.sort((a, b) => a - b)
+  } else {
+    rule.weekdays.splice(index, 1)
+  }
+}
+
+const selectAllWeekdays = (rule: ScheduleRuleForm) => {
+  rule.weekdays = [0, 1, 2, 3, 4, 5, 6]
+}
+
+const selectWorkdays = (rule: ScheduleRuleForm) => {
+  rule.weekdays = [1, 2, 3, 4, 5]
+}
+
+const selectWeekends = (rule: ScheduleRuleForm) => {
+  rule.weekdays = [0, 6]
+}
+
+function applyScheduleConfig(payload: Record<string, unknown>): boolean {
+  if (!scheduleEnabled.value) {
+    // Disabled: clear all schedule fields
+    payload.schedule_enabled = undefined
+    payload.schedule_timezone = undefined
+    payload.schedule_rules = undefined
+    return true
+  }
+
+  // Enabled: validate and apply
+  if (!scheduleTimezone.value) {
+    appStore.showError(t('admin.accounts.quotaControl.schedule.validation.invalidTimezone'))
+    return false
+  }
+
+  // Build and validate rules
+  const validRules: { weekdays: number[]; start_minute: number; end_minute: number }[] = []
+  for (let i = 0; i < scheduleRules.value.length; i++) {
+    const rule = scheduleRules.value[i]
+
+    // Validate weekdays
+    if (rule.weekdays.length === 0) {
+      appStore.showError(t('admin.accounts.quotaControl.schedule.validation.invalidWeekdays', { index: i + 1 }))
+      return false
+    }
+
+    // Validate time
+    if (!isValidTime(rule.start_time) || !isValidTime(rule.end_time)) {
+      appStore.showError(t('admin.accounts.quotaControl.schedule.validation.invalidTime', { index: i + 1 }))
+      return false
+    }
+
+    validRules.push({
+      weekdays: [...rule.weekdays].sort((a, b) => a - b),
+      start_minute: timeToMinutes(rule.start_time),
+      end_minute: timeToMinutes(rule.end_time)
+    })
+  }
+
+  if (validRules.length === 0) {
+    appStore.showError(t('admin.accounts.quotaControl.schedule.validation.noRules'))
+    return false
+  }
+
+  payload.schedule_enabled = true
+  payload.schedule_timezone = scheduleTimezone.value
+  payload.schedule_rules = validRules
+  return true
+}
 
 const form = reactive({
   name: '',
@@ -2472,7 +2818,8 @@ const createAccountAndFinish = async (
   if (!applyTempUnschedConfig(credentials)) {
     return
   }
-  await adminAPI.accounts.create({
+
+  const payload: Record<string, unknown> = {
     name: form.name,
     notes: form.notes,
     platform,
@@ -2486,7 +2833,16 @@ const createAccountAndFinish = async (
     group_ids: form.group_ids,
     expires_at: form.expires_at,
     auto_pause_on_expired: autoPauseOnExpired.value
-  })
+  }
+
+  // Apply schedule config for Anthropic OAuth/SetupToken accounts
+  if (platform === 'anthropic' && (type === 'oauth' || type === 'setup-token')) {
+    if (!applyScheduleConfig(payload)) {
+      return
+    }
+  }
+
+  await adminAPI.accounts.create(payload as any)
   appStore.showSuccess(t('admin.accounts.accountCreated'))
   emit('created')
   handleClose()
@@ -2741,7 +3097,7 @@ const handleCookieAuth = async (sessionKey: string) => {
           credentials.temp_unschedulable_rules = tempUnschedPayload
         }
 
-        await adminAPI.accounts.create({
+        const payload: Record<string, unknown> = {
           name: accountName,
           notes: form.notes,
           platform: form.platform,
@@ -2755,7 +3111,16 @@ const handleCookieAuth = async (sessionKey: string) => {
           group_ids: form.group_ids,
           expires_at: form.expires_at,
           auto_pause_on_expired: autoPauseOnExpired.value
-        })
+        }
+
+        // Apply schedule config for Anthropic OAuth/SetupToken accounts
+        if (form.platform === 'anthropic' && (addMethod.value === 'oauth' || addMethod.value === 'setup-token')) {
+          if (!applyScheduleConfig(payload)) {
+            return
+          }
+        }
+
+        await adminAPI.accounts.create(payload as any)
 
         successCount++
       } catch (error: any) {

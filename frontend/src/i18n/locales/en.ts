@@ -1389,6 +1389,47 @@ export default {
         sessionIdMasking: {
           label: 'Session ID Masking',
           hint: 'When enabled, fixes the session ID in metadata.user_id for 15 minutes, making upstream think requests come from the same session'
+        },
+        schedule: {
+          title: 'Time-Based Scheduling',
+          hint: 'Set time periods when the account is schedulable. Only applies to Anthropic OAuth/SetupToken accounts',
+          enabled: 'Enable time-based scheduling',
+          timezone: 'Timezone',
+          timezoneHint: 'The timezone for the time periods',
+          addRule: 'Add Time Period',
+          ruleIndex: 'Time Period #{index}',
+          weekdays: {
+            label: 'Weekdays',
+            hint: 'Select weekdays when this time period is active',
+            all: 'Select All',
+            workdays: 'Workdays',
+            weekends: 'Weekends',
+            monday: 'Monday',
+            tuesday: 'Tuesday',
+            wednesday: 'Wednesday',
+            thursday: 'Thursday',
+            friday: 'Friday',
+            saturday: 'Saturday',
+            sunday: 'Sunday'
+          },
+          time: {
+            start: 'Start Time',
+            end: 'End Time',
+            hint: '24-hour format, e.g., 09:00 or 18:30',
+            format: 'HH:MM'
+          },
+          presets: {
+            businessHours: 'Business Hours (9:00-18:00, Mon-Fri)',
+            nightTime: 'Night Time (22:00-06:00, Every Day)',
+            weekend: 'Weekend (Sat-Sun, All Day)'
+          },
+          validation: {
+            noRules: 'Please add at least one valid time period rule',
+            invalidWeekdays: 'Please select at least one weekday for time period #{index}',
+            invalidTime: 'Please set valid start and end times for time period #{index}',
+            invalidTimezone: 'Please select a valid timezone'
+          },
+          notice: 'When no time periods are set, the account will be schedulable at all times'
         }
       },
       expired: 'Expired',

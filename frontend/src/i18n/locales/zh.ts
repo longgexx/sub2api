@@ -1521,6 +1521,47 @@ export default {
         sessionIdMasking: {
           label: '会话 ID 伪装',
           hint: '启用后将在 15 分钟内固定 metadata.user_id 中的 session ID，使上游认为请求来自同一会话'
+        },
+        schedule: {
+          title: '按时间段调度',
+          hint: '设置账号在特定时间段内启用调度，仅对 Anthropic OAuth/SetupToken 账号生效',
+          enabled: '启用时间段调度',
+          timezone: '时区',
+          timezoneHint: '时间段所在的时区',
+          addRule: '添加时间段',
+          ruleIndex: '时间段 #{index}',
+          weekdays: {
+            label: '星期',
+            hint: '选择该时间段生效的星期',
+            all: '全选',
+            workdays: '工作日',
+            weekends: '周末',
+            monday: '周一',
+            tuesday: '周二',
+            wednesday: '周三',
+            thursday: '周四',
+            friday: '周五',
+            saturday: '周六',
+            sunday: '周日'
+          },
+          time: {
+            start: '开始时间',
+            end: '结束时间',
+            hint: '24小时制，例如 09:00 或 18:30',
+            format: 'HH:MM'
+          },
+          presets: {
+            businessHours: '工作时间（9:00-18:00，周一至周五）',
+            nightTime: '夜间时间（22:00-06:00，每天）',
+            weekend: '周末全天（周六、周日）'
+          },
+          validation: {
+            noRules: '请至少添加一条有效的时间段规则',
+            invalidWeekdays: '请为时间段 #{index} 选择至少一个星期',
+            invalidTime: '请为时间段 #{index} 设置有效的开始和结束时间',
+            invalidTimezone: '请选择有效的时区'
+          },
+          notice: '未设置时间段时，账号将不受时间限制'
         }
       },
       expired: '已过期',

@@ -435,6 +435,12 @@ export interface TempUnschedulableRule {
   description: string
 }
 
+export interface ScheduleRule {
+  weekdays: number[] // [0-6], 0=Sunday, 1=Monday, ..., 6=Saturday
+  start_minute: number // 0-1439 (minutes from midnight)
+  end_minute: number // 0-1439 (minutes from midnight)
+}
+
 export interface TempUnschedulableState {
   until_unix: number
   triggered_at_unix: number
@@ -500,6 +506,11 @@ export interface Account {
   // 会话ID伪装（仅 Anthropic OAuth/SetupToken 账号有效）
   // 启用后将在15分钟内固定 metadata.user_id 中的 session ID
   session_id_masking_enabled?: boolean | null
+
+  // 按时间段调度（仅 Anthropic OAuth/SetupToken 账号有效）
+  schedule_enabled?: boolean | null
+  schedule_timezone?: string | null
+  schedule_rules?: ScheduleRule[] | null
 
   // 运行时状态（仅当启用对应限制时返回）
   current_window_cost?: number | null // 当前窗口费用
@@ -582,6 +593,9 @@ export interface CreateAccountRequest {
   expires_at?: number | null
   auto_pause_on_expired?: boolean
   confirm_mixed_channel_risk?: boolean
+  schedule_enabled?: boolean
+  schedule_timezone?: string
+  schedule_rules?: ScheduleRule[]
 }
 
 export interface UpdateAccountRequest {
@@ -600,6 +614,9 @@ export interface UpdateAccountRequest {
   expires_at?: number | null
   auto_pause_on_expired?: boolean
   confirm_mixed_channel_risk?: boolean
+  schedule_enabled?: boolean
+  schedule_timezone?: string
+  schedule_rules?: ScheduleRule[]
 }
 
 export interface CreateProxyRequest {
