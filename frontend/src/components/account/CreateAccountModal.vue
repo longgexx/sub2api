@@ -2352,8 +2352,8 @@ function applyScheduleConfig(payload: Record<string, unknown>): boolean {
 
     validRules.push({
       weekdays: [...rule.weekdays].sort((a, b) => a - b),
-      start_minute: timeToMinutes(rule.start_time),
-      end_minute: timeToMinutes(rule.end_time)
+      start_time: rule.start_time,
+      end_time: rule.end_time
     })
   }
 
