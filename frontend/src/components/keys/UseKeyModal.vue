@@ -50,73 +50,197 @@
           </nav>
         </div>
 
-        <!-- OS/Shell Tabs -->
-        <div v-if="showShellTabs" class="border-b border-gray-200 dark:border-dark-700">
-          <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+        <!-- Config Mode Toggle (only for Claude Code) -->
+        <div v-if="showConfigModeToggle" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700">
+          <div class="flex items-center gap-2 flex-1">
             <button
-              v-for="tab in currentTabs"
-              :key="tab.id"
-              @click="activeTab = tab.id"
+              @click="configMode = 'permanent'"
               :class="[
-                'whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm transition-colors',
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                configMode === 'permanent'
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-white dark:bg-dark-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600 border border-gray-200 dark:border-dark-600'
               ]"
             >
-              <span class="flex items-center gap-2">
-                <component :is="tab.icon" class="w-4 h-4" />
-                {{ tab.label }}
-              </span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ t('keys.useKeyModal.configMode.permanent') }}
+              <span class="text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-300" v-if="configMode !== 'permanent'">{{ t('keys.useKeyModal.configMode.recommended') }}</span>
             </button>
-          </nav>
+            <button
+              @click="configMode = 'temporary'"
+              :class="[
+                'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                configMode === 'temporary'
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-white dark:bg-dark-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600 border border-gray-200 dark:border-dark-600'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ t('keys.useKeyModal.configMode.temporary') }}
+            </button>
+          </div>
         </div>
 
-        <!-- Code Blocks (Stacked for multi-file platforms) -->
-        <div class="space-y-4">
-          <div
-            v-for="(file, index) in currentFiles"
-            :key="index"
-            class="relative"
-          >
-            <!-- File Hint (if exists) -->
-            <p v-if="file.hint" class="text-xs text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1">
-              <Icon name="exclamationCircle" size="sm" class="flex-shrink-0" />
-              {{ file.hint }}
-            </p>
+        <!-- Permanent Config Mode (One-Click Setup Script) -->
+        <template v-if="showConfigModeToggle && configMode === 'permanent'">
+          <!-- OS Tabs for Script -->
+          <div class="border-b border-gray-200 dark:border-dark-700">
+            <nav class="-mb-px flex space-x-6" aria-label="OS">
+              <button
+                v-for="tab in scriptOsTabs"
+                :key="tab.id"
+                @click="scriptOsTab = tab.id as 'unix' | 'windows'"
+                :class="[
+                  'whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm transition-colors',
+                  scriptOsTab === tab.id
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                ]"
+              >
+                <span class="flex items-center gap-2">
+                  <component :is="tab.icon" class="w-4 h-4" />
+                  {{ tab.label }}
+                </span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- Command Block -->
+          <div class="relative">
             <div class="bg-gray-900 dark:bg-dark-900 rounded-xl overflow-hidden">
-              <!-- Code Header -->
+              <!-- Header -->
               <div class="flex items-center justify-between px-4 py-2 bg-gray-800 dark:bg-dark-800 border-b border-gray-700 dark:border-dark-700">
-                <span class="text-xs text-gray-400 font-mono">{{ file.path }}</span>
+                <span class="text-xs text-gray-400 font-mono">{{ currentScriptCommand.hint }}</span>
                 <button
-                  @click="copyContent(file.content, index)"
+                  @click="copyScriptCommand"
                   class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors"
-                  :class="copiedIndex === index
+                  :class="scriptCopied
                     ? 'bg-green-500/20 text-green-400'
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'"
                 >
-                  <svg v-if="copiedIndex === index" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <svg v-if="scriptCopied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                   </svg>
-                  {{ copiedIndex === index ? t('keys.useKeyModal.copied') : t('keys.useKeyModal.copy') }}
+                  {{ scriptCopied ? t('keys.useKeyModal.copied') : t('keys.useKeyModal.copy') }}
                 </button>
               </div>
-              <!-- Code Content -->
-              <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><code v-if="file.highlighted" v-html="file.highlighted"></code><code v-else v-text="file.content"></code></pre>
+              <!-- Command Content -->
+              <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto whitespace-pre-wrap break-all"><code>{{ currentScriptCommand.command }}</code></pre>
             </div>
           </div>
-        </div>
 
-        <!-- Usage Note -->
-        <div v-if="showPlatformNote" class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
-          <Icon name="infoCircle" size="md" class="text-blue-500 flex-shrink-0 mt-0.5" />
-          <p class="text-sm text-blue-700 dark:text-blue-300">
-            {{ platformNote }}
-          </p>
-        </div>
+          <!-- Steps -->
+          <div class="p-4 rounded-lg bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <Icon name="lightbulb" size="sm" class="text-yellow-500" />
+              {{ t('keys.useKeyModal.permanentConfig.steps') }}
+            </h4>
+            <ol class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs flex items-center justify-center font-medium">1</span>
+                {{ t('keys.useKeyModal.permanentConfig.step1') }}
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs flex items-center justify-center font-medium">2</span>
+                {{ t('keys.useKeyModal.permanentConfig.step2') }}
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs flex items-center justify-center font-medium">3</span>
+                {{ t('keys.useKeyModal.permanentConfig.step3', { apiKey: maskedApiKey }) }}
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs flex items-center justify-center font-medium">4</span>
+                {{ t('keys.useKeyModal.permanentConfig.step4') }}
+              </li>
+            </ol>
+          </div>
+
+          <!-- Permanent Config Note -->
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+            <Icon name="checkCircle" size="md" class="text-green-500 flex-shrink-0 mt-0.5" />
+            <p class="text-sm text-green-700 dark:text-green-300">
+              {{ t('keys.useKeyModal.permanentConfig.note') }}
+            </p>
+          </div>
+        </template>
+
+        <!-- Temporary Config Mode (Original behavior) -->
+        <template v-else>
+          <!-- OS/Shell Tabs -->
+          <div v-if="showShellTabs" class="border-b border-gray-200 dark:border-dark-700">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+              <button
+                v-for="tab in currentTabs"
+                :key="tab.id"
+                @click="activeTab = tab.id"
+                :class="[
+                  'whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm transition-colors',
+                  activeTab === tab.id
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                ]"
+              >
+                <span class="flex items-center gap-2">
+                  <component :is="tab.icon" class="w-4 h-4" />
+                  {{ tab.label }}
+                </span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- Code Blocks (Stacked for multi-file platforms) -->
+          <div class="space-y-4">
+            <div
+              v-for="(file, index) in currentFiles"
+              :key="index"
+              class="relative"
+            >
+              <!-- File Hint (if exists) -->
+              <p v-if="file.hint" class="text-xs text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1">
+                <Icon name="exclamationCircle" size="sm" class="flex-shrink-0" />
+                {{ file.hint }}
+              </p>
+              <div class="bg-gray-900 dark:bg-dark-900 rounded-xl overflow-hidden">
+                <!-- Code Header -->
+                <div class="flex items-center justify-between px-4 py-2 bg-gray-800 dark:bg-dark-800 border-b border-gray-700 dark:border-dark-700">
+                  <span class="text-xs text-gray-400 font-mono">{{ file.path }}</span>
+                  <button
+                    @click="copyContent(file.content, index)"
+                    class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors"
+                    :class="copiedIndex === index
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'"
+                  >
+                    <svg v-if="copiedIndex === index" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                    </svg>
+                    {{ copiedIndex === index ? t('keys.useKeyModal.copied') : t('keys.useKeyModal.copy') }}
+                  </button>
+                </div>
+                <!-- Code Content -->
+                <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><code v-if="file.highlighted" v-html="file.highlighted"></code><code v-else v-text="file.content"></code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usage Note -->
+          <div v-if="showPlatformNote" class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+            <Icon name="infoCircle" size="md" class="text-blue-500 flex-shrink-0 mt-0.5" />
+            <p class="text-sm text-blue-700 dark:text-blue-300">
+              {{ platformNote }}
+            </p>
+          </div>
+        </template>
       </template>
     </div>
 
@@ -174,6 +298,9 @@ const { copyToClipboard: clipboardCopy } = useClipboard()
 const copiedIndex = ref<number | null>(null)
 const activeTab = ref<string>('unix')
 const activeClientTab = ref<string>('claude')
+const configMode = ref<'permanent' | 'temporary'>('permanent')
+const scriptOsTab = ref<'unix' | 'windows'>('unix')
+const scriptCopied = ref(false)
 
 // Reset tabs when platform changes
 const defaultClientTab = computed(() => {
@@ -192,11 +319,20 @@ const defaultClientTab = computed(() => {
 watch(() => props.platform, () => {
   activeTab.value = 'unix'
   activeClientTab.value = defaultClientTab.value
+  configMode.value = 'permanent'
+  scriptOsTab.value = 'unix'
 }, { immediate: true })
 
 // Reset shell tab when client changes
 watch(activeClientTab, () => {
   activeTab.value = 'unix'
+  configMode.value = 'permanent'
+})
+
+// Masked API key for display
+const maskedApiKey = computed(() => {
+  if (props.apiKey.length <= 8) return props.apiKey
+  return props.apiKey.substring(0, 8) + '...'
 })
 
 // Icon components
@@ -288,6 +424,55 @@ const clientTabs = computed((): TabConfig[] => {
       ]
   }
 })
+
+// Show config mode toggle for Claude Code configurations
+const showConfigModeToggle = computed(() => {
+  if (!props.platform) return false
+  // Show toggle for Claude Code in anthropic platform or antigravity with claude client
+  if (props.platform === 'anthropic' && activeClientTab.value === 'claude') return true
+  if (props.platform === 'antigravity' && activeClientTab.value === 'claude') return true
+  return false
+})
+
+// Script OS tabs
+const scriptOsTabs = computed((): TabConfig[] => [
+  {
+    id: 'unix' as const,
+    label: t('keys.useKeyModal.permanentConfig.macLinux'),
+    icon: TerminalIcon
+  },
+  {
+    id: 'windows' as const,
+    label: t('keys.useKeyModal.permanentConfig.windows'),
+    icon: WindowsIcon
+  }
+])
+
+// Current script command based on OS selection
+const currentScriptCommand = computed(() => {
+  const scriptBaseUrl = props.baseUrl ? props.baseUrl.replace(/\/v1\/?$/, '').replace(/\/+$/, '') : window.location.origin
+
+  if (scriptOsTab.value === 'unix') {
+    return {
+      hint: 'Terminal (bash/zsh)',
+      command: `curl -sSL ${scriptBaseUrl}/scripts/claude-code-setup.sh | bash`
+    }
+  } else {
+    return {
+      hint: 'PowerShell',
+      command: `irm ${scriptBaseUrl}/scripts/claude-code-setup.ps1 | iex`
+    }
+  }
+})
+
+// Copy script command
+async function copyScriptCommand() {
+  await clipboardCopy(currentScriptCommand.value.command)
+  scriptCopied.value = true
+  setTimeout(() => {
+    scriptCopied.value = false
+  }, 2000)
+}
 
 // Shell tabs (3 types for environment variable based configs)
 const shellTabs: TabConfig[] = [

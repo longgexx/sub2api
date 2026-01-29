@@ -179,6 +179,16 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 	}, nil
 }
 
+// GetScriptSettings returns site name and API base URL for script generation
+// This implements the routes.SimpleSettingsProvider interface
+func (s *SettingService) GetScriptSettings(ctx context.Context) (siteName, apiBaseURL string, err error) {
+	settings, err := s.GetPublicSettings(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	return settings.SiteName, settings.APIBaseURL, nil
+}
+
 // UpdateSettings 更新系统设置
 func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSettings) error {
 	updates := make(map[string]string)

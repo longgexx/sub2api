@@ -82,12 +82,13 @@ func (s *FrontendServer) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
 
-		// Skip API routes
+		// Skip API routes and scripts
 		if strings.HasPrefix(path, "/api/") ||
 			strings.HasPrefix(path, "/v1/") ||
 			strings.HasPrefix(path, "/v1beta/") ||
 			strings.HasPrefix(path, "/antigravity/") ||
 			strings.HasPrefix(path, "/setup/") ||
+			strings.HasPrefix(path, "/scripts/") ||
 			path == "/health" ||
 			path == "/responses" {
 			c.Next()
@@ -211,6 +212,7 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 			strings.HasPrefix(path, "/v1beta/") ||
 			strings.HasPrefix(path, "/antigravity/") ||
 			strings.HasPrefix(path, "/setup/") ||
+			strings.HasPrefix(path, "/scripts/") ||
 			path == "/health" ||
 			path == "/responses" {
 			c.Next()
