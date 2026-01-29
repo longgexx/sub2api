@@ -40,6 +40,11 @@
                 {{ t('usage.in') }}: {{ formatTokens(usageStats?.total_input_tokens || 0) }} /
                 {{ t('usage.out') }}: {{ formatTokens(usageStats?.total_output_tokens || 0) }}
               </p>
+              <p v-if="usageStats?.total_cache_tokens && usageStats.total_cache_tokens > 0" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <span class="text-sky-600 dark:text-sky-400">{{ t('usage.cacheRead') }}: {{ formatTokens(usageStats?.total_cache_read_tokens || 0) }}</span>
+                <span class="mx-1">/</span>
+                <span class="text-amber-600 dark:text-amber-400">{{ t('usage.cacheWrite') }}: {{ formatTokens(usageStats?.total_cache_creation_tokens || 0) }}</span>
+              </p>
             </div>
           </div>
         </div>

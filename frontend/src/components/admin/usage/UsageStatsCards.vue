@@ -19,6 +19,11 @@
           {{ t('usage.in') }}: {{ formatTokens(stats?.total_input_tokens || 0) }} /
           {{ t('usage.out') }}: {{ formatTokens(stats?.total_output_tokens || 0) }}
         </p>
+        <p v-if="stats?.total_cache_tokens && stats.total_cache_tokens > 0" class="text-xs text-gray-500 mt-0.5">
+          <span class="text-sky-600 dark:text-sky-400">{{ t('usage.cacheRead') }}: {{ formatTokens(stats?.total_cache_read_tokens || 0) }}</span>
+          <span class="mx-1">/</span>
+          <span class="text-amber-600 dark:text-amber-400">{{ t('usage.cacheWrite') }}: {{ formatTokens(stats?.total_cache_creation_tokens || 0) }}</span>
+        </p>
       </div>
     </div>
     <div class="card p-4 flex items-center gap-3">
