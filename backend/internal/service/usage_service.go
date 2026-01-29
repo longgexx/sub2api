@@ -190,14 +190,16 @@ func (s *UsageService) GetStatsByUser(ctx context.Context, userID int64, startTi
 	}
 
 	return &UsageStats{
-		TotalRequests:     stats.TotalRequests,
-		TotalInputTokens:  stats.TotalInputTokens,
-		TotalOutputTokens: stats.TotalOutputTokens,
-		TotalCacheTokens:  stats.TotalCacheTokens,
-		TotalTokens:       stats.TotalTokens,
-		TotalCost:         stats.TotalCost,
-		TotalActualCost:   stats.TotalActualCost,
-		AverageDurationMs: stats.AverageDurationMs,
+		TotalRequests:            stats.TotalRequests,
+		TotalInputTokens:         stats.TotalInputTokens,
+		TotalOutputTokens:        stats.TotalOutputTokens,
+		TotalCacheTokens:         stats.TotalCacheTokens,
+		TotalCacheCreationTokens: stats.TotalCacheCreationTokens,
+		TotalCacheReadTokens:     stats.TotalCacheReadTokens,
+		TotalTokens:              stats.TotalTokens,
+		TotalCost:                stats.TotalCost,
+		TotalActualCost:          stats.TotalActualCost,
+		AverageDurationMs:        stats.AverageDurationMs,
 	}, nil
 }
 
@@ -209,14 +211,16 @@ func (s *UsageService) GetStatsByAPIKey(ctx context.Context, apiKeyID int64, sta
 	}
 
 	return &UsageStats{
-		TotalRequests:     stats.TotalRequests,
-		TotalInputTokens:  stats.TotalInputTokens,
-		TotalOutputTokens: stats.TotalOutputTokens,
-		TotalCacheTokens:  stats.TotalCacheTokens,
-		TotalTokens:       stats.TotalTokens,
-		TotalCost:         stats.TotalCost,
-		TotalActualCost:   stats.TotalActualCost,
-		AverageDurationMs: stats.AverageDurationMs,
+		TotalRequests:            stats.TotalRequests,
+		TotalInputTokens:         stats.TotalInputTokens,
+		TotalOutputTokens:        stats.TotalOutputTokens,
+		TotalCacheTokens:         stats.TotalCacheTokens,
+		TotalCacheCreationTokens: stats.TotalCacheCreationTokens,
+		TotalCacheReadTokens:     stats.TotalCacheReadTokens,
+		TotalTokens:              stats.TotalTokens,
+		TotalCost:                stats.TotalCost,
+		TotalActualCost:          stats.TotalActualCost,
+		AverageDurationMs:        stats.AverageDurationMs,
 	}, nil
 }
 
