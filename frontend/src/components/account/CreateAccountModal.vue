@@ -2210,11 +2210,6 @@ const tempUnschedPresets = computed(() => [
 ])
 
 // Schedule control helper functions
-function timeToMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number)
-  return h * 60 + m
-}
-
 function isValidTime(time: string): boolean {
   if (!time || typeof time !== 'string') return false
   const match = time.match(/^([01]?[0-9]|2[0-3]):([0-5][0-9])$/)
@@ -2334,7 +2329,7 @@ function applyScheduleConfig(payload: Record<string, unknown>): boolean {
   }
 
   // Build and validate rules
-  const validRules: { weekdays: number[]; start_minute: number; end_minute: number }[] = []
+  const validRules: { weekdays: number[]; start_time: string; end_time: string }[] = []
   for (let i = 0; i < scheduleRules.value.length; i++) {
     const rule = scheduleRules.value[i]
 
