@@ -220,10 +220,10 @@ func (s *RedeemCodeRepoSuite) TestUpdate() {
 
 func (s *RedeemCodeRepoSuite) TestUse() {
 	user := s.createUser(uniqueTestValue(s.T(), "use") + "@example.com")
-	code := &service.RedeemCode{Code: "USE-ME", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUnused}
+	code := &service.RedeemCode{Code: "USE-ME", Type: service.RedeemTypeBalance, Value: 10.0, Status: service.StatusUnused}
 	s.Require().NoError(s.repo.Create(s.ctx, code))
 
-	err := s.repo.Use(s.ctx, code.ID, user.ID)
+	err := s.repo.Use(s.ctx, code.ID, user.ID, 10.0)
 	s.Require().NoError(err, "Use")
 
 	got, err := s.repo.GetByID(s.ctx, code.ID)
@@ -236,24 +236,24 @@ func (s *RedeemCodeRepoSuite) TestUse() {
 
 func (s *RedeemCodeRepoSuite) TestUse_Idempotency() {
 	user := s.createUser(uniqueTestValue(s.T(), "idem") + "@example.com")
-	code := &service.RedeemCode{Code: "IDEM-CODE", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUnused}
+	code := &service.RedeemCode{Code: "IDEM-CODE", Type: service.RedeemTypeBalance, Value: 10.0, Status: service.StatusUnused}
 	s.Require().NoError(s.repo.Create(s.ctx, code))
 
-	err := s.repo.Use(s.ctx, code.ID, user.ID)
+	err := s.repo.Use(s.ctx, code.ID, user.ID, 10.0)
 	s.Require().NoError(err, "Use first time")
 
 	// Second use should fail
-	err = s.repo.Use(s.ctx, code.ID, user.ID)
+	err = s.repo.Use(s.ctx, code.ID, user.ID, 10.0)
 	s.Require().Error(err, "Use expected error on second call")
 	s.Require().ErrorIs(err, service.ErrRedeemCodeUsed)
 }
 
 func (s *RedeemCodeRepoSuite) TestUse_AlreadyUsed() {
 	user := s.createUser(uniqueTestValue(s.T(), "already") + "@example.com")
-	code := &service.RedeemCode{Code: "ALREADY-USED", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUsed}
+	code := &service.RedeemCode{Code: "ALREADY-USED", Type: service.RedeemTypeBalance, Value: 10.0, Status: service.StatusUsed}
 	s.Require().NoError(s.repo.Create(s.ctx, code))
 
-	err := s.repo.Use(s.ctx, code.ID, user.ID)
+	err := s.repo.Use(s.ctx, code.ID, user.ID, 10.0)
 	s.Require().Error(err, "expected error for already used code")
 	s.Require().ErrorIs(err, service.ErrRedeemCodeUsed)
 }
@@ -364,8 +364,8 @@ func (s *RedeemCodeRepoSuite) TestCreateBatch_Filters_Use_Idempotency_ListByUser
 
 	codeB, err := s.repo.GetByCode(s.ctx, "CODEB")
 	s.Require().NoError(err, "GetByCode")
-	s.Require().NoError(s.repo.Use(s.ctx, codeB.ID, user.ID), "Use")
-	err = s.repo.Use(s.ctx, codeB.ID, user.ID)
+	s.Require().NoError(s.repo.Use(s.ctx, codeB.ID, user.ID, 10.0), "Use")
+	err = s.repo.Use(s.ctx, codeB.ID, user.ID, 10.0)
 	s.Require().Error(err, "Use expected error on second call")
 	s.Require().ErrorIs(err, service.ErrRedeemCodeUsed)
 
@@ -377,7 +377,7 @@ func (s *RedeemCodeRepoSuite) TestCreateBatch_Filters_Use_Idempotency_ListByUser
 		SetUsedAt(time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)).
 		Save(s.ctx)
 	s.Require().NoError(err)
-	s.Require().NoError(s.repo.Use(s.ctx, codeA.ID, user.ID), "Use codeA")
+	s.Require().NoError(s.repo.Use(s.ctx, codeA.ID, user.ID, 10.0), "Use codeA")
 	_, err = s.client.RedeemCode.UpdateOneID(codeA.ID).
 		SetUsedAt(time.Date(2025, 1, 1, 13, 0, 0, 0, time.UTC)).
 		Save(s.ctx)
