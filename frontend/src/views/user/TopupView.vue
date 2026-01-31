@@ -144,7 +144,7 @@
                 v-if="config?.qr_code_url"
                 :src="config.qr_code_url"
                 alt="Payment QR Code"
-                class="h-48 w-48"
+                class="h-48 w-48 object-contain"
               />
               <div v-else class="flex h-48 w-48 items-center justify-center bg-gray-100">
                 <Icon name="creditCard" size="xl" class="text-gray-400" />
