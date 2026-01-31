@@ -70,7 +70,7 @@ func CORS(cfg config.CORSConfig) gin.HandlerFunc {
 			}
 		}
 
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-API-Key")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-API-Key, anthropic-dangerous-direct-browser-access, anthropic-version, anthropic-beta, sec-ch-ua, sec-ch-ua-platform, sec-ch-ua-mobile, referer")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
 		// 处理预检请求
