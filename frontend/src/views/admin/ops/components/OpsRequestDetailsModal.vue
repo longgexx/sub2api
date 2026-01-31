@@ -202,6 +202,12 @@ const kindBadgeClass = (kind: string) => {
                     {{ t('admin.ops.requestDetails.table.platform') }}
                   </th>
                   <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    {{ t('admin.ops.requestDetails.table.account') }}
+                  </th>
+                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    {{ t('admin.ops.requestDetails.table.user') }}
+                  </th>
+                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     {{ t('admin.ops.requestDetails.table.model') }}
                   </th>
                   <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -230,6 +236,22 @@ const kindBadgeClass = (kind: string) => {
                   </td>
                   <td class="whitespace-nowrap px-4 py-3 text-xs font-medium text-gray-700 dark:text-gray-200">
                     {{ (row.platform || 'unknown').toUpperCase() }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <el-tooltip v-if="row.account_id" :content="t('admin.ops.requestDetails.table.accountId') + ': ' + row.account_id" placement="top" :show-after="500">
+                      <span class="max-w-[100px] truncate text-xs font-medium text-gray-900 dark:text-gray-200">
+                        {{ row.account_name || row.account_id }}
+                      </span>
+                    </el-tooltip>
+                    <span v-else class="text-xs text-gray-400">-</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <el-tooltip v-if="row.user_id" :content="t('admin.ops.requestDetails.table.userId') + ': ' + row.user_id" placement="top" :show-after="500">
+                      <span class="max-w-[100px] truncate text-xs font-medium text-gray-900 dark:text-gray-200">
+                        {{ row.user_email || row.user_id }}
+                      </span>
+                    </el-tooltip>
+                    <span v-else class="text-xs text-gray-400">-</span>
                   </td>
                   <td class="max-w-[240px] truncate px-4 py-3 text-xs text-gray-600 dark:text-gray-300" :title="row.model || ''">
                     {{ row.model || '-' }}

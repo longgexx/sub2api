@@ -58,6 +58,20 @@ func (_c *RedeemCodeCreate) SetNillableValue(v *float64) *RedeemCodeCreate {
 	return _c
 }
 
+// SetActualValue sets the "actual_value" field.
+func (_c *RedeemCodeCreate) SetActualValue(v float64) *RedeemCodeCreate {
+	_c.mutation.SetActualValue(v)
+	return _c
+}
+
+// SetNillableActualValue sets the "actual_value" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableActualValue(v *float64) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetActualValue(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *RedeemCodeCreate) SetStatus(v string) *RedeemCodeCreate {
 	_c.mutation.SetStatus(v)
@@ -311,6 +325,10 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 		_spec.SetField(redeemcode.FieldValue, field.TypeFloat64, value)
 		_node.Value = value
 	}
+	if value, ok := _c.mutation.ActualValue(); ok {
+		_spec.SetField(redeemcode.FieldActualValue, field.TypeFloat64, value)
+		_node.ActualValue = &value
+	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)
 		_node.Status = value
@@ -456,6 +474,30 @@ func (u *RedeemCodeUpsert) UpdateValue() *RedeemCodeUpsert {
 // AddValue adds v to the "value" field.
 func (u *RedeemCodeUpsert) AddValue(v float64) *RedeemCodeUpsert {
 	u.Add(redeemcode.FieldValue, v)
+	return u
+}
+
+// SetActualValue sets the "actual_value" field.
+func (u *RedeemCodeUpsert) SetActualValue(v float64) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldActualValue, v)
+	return u
+}
+
+// UpdateActualValue sets the "actual_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateActualValue() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldActualValue)
+	return u
+}
+
+// AddActualValue adds v to the "actual_value" field.
+func (u *RedeemCodeUpsert) AddActualValue(v float64) *RedeemCodeUpsert {
+	u.Add(redeemcode.FieldActualValue, v)
+	return u
+}
+
+// ClearActualValue clears the value of the "actual_value" field.
+func (u *RedeemCodeUpsert) ClearActualValue() *RedeemCodeUpsert {
+	u.SetNull(redeemcode.FieldActualValue)
 	return u
 }
 
@@ -652,6 +694,34 @@ func (u *RedeemCodeUpsertOne) AddValue(v float64) *RedeemCodeUpsertOne {
 func (u *RedeemCodeUpsertOne) UpdateValue() *RedeemCodeUpsertOne {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValue()
+	})
+}
+
+// SetActualValue sets the "actual_value" field.
+func (u *RedeemCodeUpsertOne) SetActualValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetActualValue(v)
+	})
+}
+
+// AddActualValue adds v to the "actual_value" field.
+func (u *RedeemCodeUpsertOne) AddActualValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddActualValue(v)
+	})
+}
+
+// UpdateActualValue sets the "actual_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateActualValue() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateActualValue()
+	})
+}
+
+// ClearActualValue clears the value of the "actual_value" field.
+func (u *RedeemCodeUpsertOne) ClearActualValue() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearActualValue()
 	})
 }
 
@@ -1031,6 +1101,34 @@ func (u *RedeemCodeUpsertBulk) AddValue(v float64) *RedeemCodeUpsertBulk {
 func (u *RedeemCodeUpsertBulk) UpdateValue() *RedeemCodeUpsertBulk {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValue()
+	})
+}
+
+// SetActualValue sets the "actual_value" field.
+func (u *RedeemCodeUpsertBulk) SetActualValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetActualValue(v)
+	})
+}
+
+// AddActualValue adds v to the "actual_value" field.
+func (u *RedeemCodeUpsertBulk) AddActualValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddActualValue(v)
+	})
+}
+
+// UpdateActualValue sets the "actual_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateActualValue() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateActualValue()
+	})
+}
+
+// ClearActualValue clears the value of the "actual_value" field.
+func (u *RedeemCodeUpsertBulk) ClearActualValue() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearActualValue()
 	})
 }
 

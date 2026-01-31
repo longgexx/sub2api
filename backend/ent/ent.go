@@ -16,10 +16,12 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/redeemrule"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -27,6 +29,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userredeemstat"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -92,10 +95,12 @@ func checkColumn(t, c string) error {
 			account.Table:                 account.ValidColumn,
 			accountgroup.Table:            accountgroup.ValidColumn,
 			group.Table:                   group.ValidColumn,
+			paymentorder.Table:            paymentorder.ValidColumn,
 			promocode.Table:               promocode.ValidColumn,
 			promocodeusage.Table:          promocodeusage.ValidColumn,
 			proxy.Table:                   proxy.ValidColumn,
 			redeemcode.Table:              redeemcode.ValidColumn,
+			redeemrule.Table:              redeemrule.ValidColumn,
 			setting.Table:                 setting.ValidColumn,
 			usagecleanuptask.Table:        usagecleanuptask.ValidColumn,
 			usagelog.Table:                usagelog.ValidColumn,
@@ -103,6 +108,7 @@ func checkColumn(t, c string) error {
 			userallowedgroup.Table:        userallowedgroup.ValidColumn,
 			userattributedefinition.Table: userattributedefinition.ValidColumn,
 			userattributevalue.Table:      userattributevalue.ValidColumn,
+			userredeemstat.Table:          userredeemstat.ValidColumn,
 			usersubscription.Table:        usersubscription.ValidColumn,
 		})
 	})

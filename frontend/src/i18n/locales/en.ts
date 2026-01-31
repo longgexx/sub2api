@@ -142,6 +142,8 @@ export default {
     close: 'Close',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    enable: 'Enable',
+    disable: 'Disable',
     total: 'Total',
     balance: 'Balance',
     available: 'Available',
@@ -195,6 +197,7 @@ export default {
     accounts: 'Accounts',
     proxies: 'Proxies',
     redeemCodes: 'Redeem Codes',
+    redeemRules: 'Redeem Rules',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
     settings: 'Settings',
@@ -207,7 +210,9 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Purchase Subscription',
-    docs: 'Docs'
+    docs: 'Docs',
+    topup: 'Top Up',
+    paymentOrders: 'Payment Orders'
   },
 
   // Auth
@@ -587,7 +592,85 @@ export default {
     codeRedeemSuccess: 'Code redeemed successfully!',
     failedToRedeem: 'Failed to redeem code. Please check the code and try again.',
     subscriptionRefreshFailed: 'Redeemed successfully, but failed to refresh subscription status.',
-    pleaseEnterCode: 'Please enter a redeem code'
+    pleaseEnterCode: 'Please enter a redeem code',
+    originalValue: 'Original value',
+    actualValue: 'Actual amount',
+    trialUsed: 'You have already used your trial discount. Future trial codes will be redeemed at the standard rate. Consider regular top-ups for more balance!',
+    confirmTitle: 'Confirm Redemption',
+    confirmDegradedRedeem: 'This code will be redeemed at a reduced amount. Do you want to continue?',
+    confirmRedeem: 'Confirm',
+    redeemCanceled: 'Redemption canceled'
+  },
+
+  // Payment / Topup
+  payment: {
+    title: 'Top Up',
+    description: 'Top up your account balance with Alipay',
+    currentBalance: 'Current Balance',
+    notEnabled: 'Top Up Not Available',
+    notEnabledHint: 'Payment feature is not enabled. Please contact the administrator for assistance.',
+    topupAmount: 'Top Up Amount',
+    customAmount: 'Custom Amount',
+    customAmountPlaceholder: 'Enter amount',
+    amountRange: 'Amount range: {min} - {max}',
+    estimatedPayment: 'Estimated payment: ¥{amount}',
+    minAmount: 'Minimum',
+    maxAmount: 'Maximum',
+    quickAmounts: 'Quick Amounts',
+    createOrder: 'Create Order',
+    creating: 'Creating...',
+    orderCreated: 'Order Created',
+    orderInfo: 'Order Information',
+    tradeNo: 'Order No.',
+    amount: 'Top Up Amount',
+    paymentAmount: 'Amount to Pay',
+    paymentAmountHint: 'Please scan the QR code below with Alipay and pay {amount} CNY',
+    payExactAmount: 'You MUST pay the exact amount shown, otherwise it cannot be credited automatically!',
+    actualCreditHint: 'You will be credited the exact amount you pay. The decimal difference is for order identification.',
+    scanToPay: 'Scan to Pay',
+    scanToPayHint: 'Please scan the QR code with Alipay',
+    scanQrCode: 'Scan to Pay',
+    qrCodeHint: 'Please scan the QR code with Alipay to complete payment',
+    orderExpires: 'Time Remaining',
+    timeRemaining: 'Time Remaining',
+    expired: 'Expired',
+    checkingStatus: 'Checking payment status...',
+    paymentSuccess: 'Payment Successful!',
+    paymentSuccessHint: 'Your balance has been updated',
+    balanceAdded: 'Balance Added',
+    balanceUpdated: 'Balance increased by ${amount}',
+    orderExpired: 'Order Expired',
+    orderExpiredHint: 'Please create a new order',
+    cancelOrder: 'Cancel Order',
+    cancelling: 'Cancelling...',
+    orderCancelled: 'Order Cancelled',
+    cancelFailed: 'Failed to cancel order',
+    createOrderFailed: 'Failed to create order',
+    orderHistory: 'Order History',
+    recentOrders: 'Recent Orders',
+    noOrders: 'No top up records',
+    instructions: 'Instructions',
+    instruction1: 'Please scan the QR code with Alipay to complete payment',
+    instruction2: 'The payment amount must match exactly, otherwise it cannot be credited automatically',
+    instruction3: 'After successful payment, your balance will be credited within 1-2 minutes',
+    instruction4: 'If you encounter any issues, please contact support with your order number',
+    requested: 'requested',
+    actualPaid: 'paid',
+    status: {
+      pending: 'Pending',
+      paid: 'Paid',
+      expired: 'Expired',
+      cancelled: 'Cancelled'
+    },
+    errors: {
+      loadConfigFailed: 'Failed to load payment configuration',
+      createOrderFailed: 'Failed to create order',
+      cancelOrderFailed: 'Failed to cancel order',
+      loadOrdersFailed: 'Failed to load orders',
+      amountRequired: 'Please enter a top up amount',
+      amountTooSmall: 'Amount cannot be less than {min}',
+      amountTooLarge: 'Amount cannot be greater than {max}'
+    }
   },
 
   // Profile
@@ -2022,6 +2105,45 @@ export default {
       }
     },
 
+    // Redeem Rules (Trial Limitation Rules)
+    redeemRules: {
+      title: 'Redeem Rules',
+      description: 'Manage trial code redemption limitation rules',
+      descriptionDetail: 'Control how many times users can redeem codes of specific values at full price. Excess redemptions are automatically degraded to a lower value.',
+      createRule: 'Create Rule',
+      editRule: 'Edit Rule',
+      deleteRule: 'Delete Rule',
+      deleteRuleConfirm: 'Are you sure you want to delete this rule? Once deleted, there will be no usage limit for codes of this value.',
+      columns: {
+        type: 'Type',
+        triggerValue: 'Trigger Value',
+        maxTimes: 'Max Times',
+        fallbackValue: 'Fallback Value',
+        status: 'Status',
+        description: 'Description'
+      },
+      codeType: 'Code Type',
+      triggerValue: 'Trigger Value',
+      triggerValueHint: 'Rule triggers when user redeems a code with this value',
+      maxTimesPerUser: 'Max Times Per User',
+      maxTimesHint: 'Number of times each user can redeem at full value',
+      fallbackValue: 'Fallback Value',
+      fallbackValueHint: 'Value to use after user exceeds max times',
+      ruleDescription: 'Description',
+      descriptionPlaceholder: 'e.g., $5 trial code limit: 1 full-price redemption per user',
+      enableRule: 'Enable Rule',
+      times: 'times',
+      ruleCreated: 'Rule created successfully',
+      ruleUpdated: 'Rule updated successfully',
+      ruleDeleted: 'Rule deleted successfully',
+      ruleEnabled: 'Rule enabled',
+      ruleDisabled: 'Rule disabled',
+      failedToLoad: 'Failed to load rules',
+      failedToSave: 'Failed to save rule',
+      failedToUpdate: 'Failed to update rule',
+      failedToDelete: 'Failed to delete rule'
+    },
+
     // Promo Codes
     promo: {
       title: 'Promo Code Management',
@@ -2079,6 +2201,49 @@ export default {
       failedToUpdate: 'Failed to update promo code',
       failedToDelete: 'Failed to delete promo code',
       failedToLoadUsages: 'Failed to load usage records'
+    },
+
+    // Payment Orders
+    payment: {
+      title: 'Payment Orders',
+      description: 'Manage user payment orders',
+      todayPaid: 'Today Paid',
+      totalPaid: 'Total Paid',
+      pendingOrders: 'Pending Orders',
+      searchOrders: 'Search orders...',
+      allStatus: 'All Status',
+      tradeNo: 'Order No.',
+      user: 'User',
+      amount: 'Amount',
+      paymentAmount: 'Payment Amount',
+      creditAmount: 'Credited Amount',
+      statusLabel: 'Status',
+      payerAccount: 'Payer Account',
+      createdAt: 'Created At',
+      paidAt: 'Paid At',
+      status: {
+        pending: 'Pending',
+        paid: 'Paid',
+        expired: 'Expired',
+        cancelled: 'Cancelled'
+      },
+      confirm: 'Confirm',
+      manualConfirm: 'Manual Confirm Payment',
+      manualConfirmHint: 'Are you sure to manually confirm order {trade_no} as paid ${amount}? This will add the corresponding balance to the user.',
+      confirmPayment: 'Confirm Payment',
+      confirmSuccess: 'Order confirmed as paid',
+      confirmFailed: 'Failed to confirm payment',
+      loadFailed: 'Failed to load orders',
+      monitorService: 'Monitor Service',
+      running: 'Running',
+      stopped: 'Stopped',
+      lastCheck: 'Last Check',
+      startMonitor: 'Start Monitor',
+      stopMonitor: 'Stop Monitor',
+      monitorStarted: 'Monitor service started',
+      monitorStopped: 'Monitor service stopped',
+      monitorStartFailed: 'Failed to start monitor',
+      monitorStopFailed: 'Failed to stop monitor'
     },
 
     // Usage Records
@@ -2494,6 +2659,10 @@ export default {
           time: 'Time',
           kind: 'Kind',
           platform: 'Platform',
+          account: 'Account',
+          accountId: 'Account ID',
+          user: 'User',
+          userId: 'User ID',
           model: 'Model',
           duration: 'Duration',
           status: 'Status',
@@ -2976,6 +3145,18 @@ export default {
         urlHint: 'Must be an absolute http(s) URL',
         iframeWarning:
           '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.'
+      },
+      payment: {
+        title: 'Payment Settings',
+        description: 'Configure payment QR code and rate coefficient',
+        qrCode: 'Alipay QR Code',
+        uploadQRCode: 'Upload QR Code',
+        qrCodeHint: 'Upload a clear Alipay business or personal payment QR code, max 500KB',
+        qrCodeSizeError: 'Image size cannot exceed 500KB',
+        qrCodeTypeError: 'Please upload an image file',
+        qrCodeReadError: 'Failed to read image',
+        rateCoefficient: 'Rate Coefficient',
+        rateCoefficientHint: 'Example: Top up $10 will pay ¥{example}'
       },
       smtp: {
         title: 'SMTP Settings',

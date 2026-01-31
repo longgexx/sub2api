@@ -270,6 +270,64 @@ var (
 			},
 		},
 	}
+	// PaymentOrdersColumns holds the columns for the "payment_orders" table.
+	PaymentOrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "trade_no", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "amount", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "payment_amount", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "pending"},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "expired_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "alipay_trade_no", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "alipay_trans_log_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 64},
+		{Name: "payer_account", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "credit_amount", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// PaymentOrdersTable holds the schema information for the "payment_orders" table.
+	PaymentOrdersTable = &schema.Table{
+		Name:       "payment_orders",
+		Columns:    PaymentOrdersColumns,
+		PrimaryKey: []*schema.Column{PaymentOrdersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "payment_orders_users_payment_orders",
+				Columns:    []*schema.Column{PaymentOrdersColumns[13]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "paymentorder_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[13]},
+			},
+			{
+				Name:    "paymentorder_status",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[4]},
+			},
+			{
+				Name:    "paymentorder_payment_amount_status",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[3], PaymentOrdersColumns[4]},
+			},
+			{
+				Name:    "paymentorder_expired_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[7]},
+			},
+			{
+				Name:    "paymentorder_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[5]},
+			},
+		},
+	}
 	// PromoCodesColumns holds the columns for the "promo_codes" table.
 	PromoCodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -384,6 +442,7 @@ var (
 		{Name: "code", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "type", Type: field.TypeString, Size: 20, Default: "balance"},
 		{Name: "value", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "actual_value", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "unused"},
 		{Name: "used_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
@@ -400,13 +459,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "redeem_codes_groups_redeem_codes",
-				Columns:    []*schema.Column{RedeemCodesColumns[9]},
+				Columns:    []*schema.Column{RedeemCodesColumns[10]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "redeem_codes_users_redeem_codes",
-				Columns:    []*schema.Column{RedeemCodesColumns[10]},
+				Columns:    []*schema.Column{RedeemCodesColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -415,17 +474,47 @@ var (
 			{
 				Name:    "redeemcode_status",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[4]},
+				Columns: []*schema.Column{RedeemCodesColumns[5]},
 			},
 			{
 				Name:    "redeemcode_used_by",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[10]},
+				Columns: []*schema.Column{RedeemCodesColumns[11]},
 			},
 			{
 				Name:    "redeemcode_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[9]},
+				Columns: []*schema.Column{RedeemCodesColumns[10]},
+			},
+		},
+	}
+	// RedeemRulesColumns holds the columns for the "redeem_rules" table.
+	RedeemRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "type", Type: field.TypeString, Size: 20, Default: "balance"},
+		{Name: "trigger_value", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "max_times_per_user", Type: field.TypeInt, Default: 1},
+		{Name: "fallback_value", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// RedeemRulesTable holds the schema information for the "redeem_rules" table.
+	RedeemRulesTable = &schema.Table{
+		Name:       "redeem_rules",
+		Columns:    RedeemRulesColumns,
+		PrimaryKey: []*schema.Column{RedeemRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "redeemrule_type_trigger_value",
+				Unique:  true,
+				Columns: []*schema.Column{RedeemRulesColumns[1], RedeemRulesColumns[2]},
+			},
+			{
+				Name:    "redeemrule_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{RedeemRulesColumns[5]},
 			},
 		},
 	}
@@ -759,6 +848,38 @@ var (
 			},
 		},
 	}
+	// UserRedeemStatsColumns holds the columns for the "user_redeem_stats" table.
+	UserRedeemStatsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "redeem_type", Type: field.TypeString, Size: 20, Default: "balance"},
+		{Name: "value", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "used_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// UserRedeemStatsTable holds the schema information for the "user_redeem_stats" table.
+	UserRedeemStatsTable = &schema.Table{
+		Name:       "user_redeem_stats",
+		Columns:    UserRedeemStatsColumns,
+		PrimaryKey: []*schema.Column{UserRedeemStatsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_redeem_stats_users_redeem_stats",
+				Columns:    []*schema.Column{UserRedeemStatsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userredeemstat_user_id_redeem_type_value",
+				Unique:  true,
+				Columns: []*schema.Column{UserRedeemStatsColumns[7], UserRedeemStatsColumns[1], UserRedeemStatsColumns[2]},
+			},
+		},
+	}
 	// UserSubscriptionsColumns holds the columns for the "user_subscriptions" table.
 	UserSubscriptionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -849,10 +970,12 @@ var (
 		AccountsTable,
 		AccountGroupsTable,
 		GroupsTable,
+		PaymentOrdersTable,
 		PromoCodesTable,
 		PromoCodeUsagesTable,
 		ProxiesTable,
 		RedeemCodesTable,
+		RedeemRulesTable,
 		SettingsTable,
 		UsageCleanupTasksTable,
 		UsageLogsTable,
@@ -860,6 +983,7 @@ var (
 		UserAllowedGroupsTable,
 		UserAttributeDefinitionsTable,
 		UserAttributeValuesTable,
+		UserRedeemStatsTable,
 		UserSubscriptionsTable,
 	}
 )
@@ -882,6 +1006,10 @@ func init() {
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
 	}
+	PaymentOrdersTable.ForeignKeys[0].RefTable = UsersTable
+	PaymentOrdersTable.Annotation = &entsql.Annotation{
+		Table: "payment_orders",
+	}
 	PromoCodesTable.Annotation = &entsql.Annotation{
 		Table: "promo_codes",
 	}
@@ -897,6 +1025,9 @@ func init() {
 	RedeemCodesTable.ForeignKeys[1].RefTable = UsersTable
 	RedeemCodesTable.Annotation = &entsql.Annotation{
 		Table: "redeem_codes",
+	}
+	RedeemRulesTable.Annotation = &entsql.Annotation{
+		Table: "redeem_rules",
 	}
 	SettingsTable.Annotation = &entsql.Annotation{
 		Table: "settings",
@@ -927,6 +1058,10 @@ func init() {
 	UserAttributeValuesTable.ForeignKeys[1].RefTable = UserAttributeDefinitionsTable
 	UserAttributeValuesTable.Annotation = &entsql.Annotation{
 		Table: "user_attribute_values",
+	}
+	UserRedeemStatsTable.ForeignKeys[0].RefTable = UsersTable
+	UserRedeemStatsTable.Annotation = &entsql.Annotation{
+		Table: "user_redeem_stats",
 	}
 	UserSubscriptionsTable.ForeignKeys[0].RefTable = GroupsTable
 	UserSubscriptionsTable.ForeignKeys[1].RefTable = UsersTable

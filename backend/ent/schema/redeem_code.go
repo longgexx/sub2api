@@ -45,6 +45,10 @@ func (RedeemCode) Fields() []ent.Field {
 		field.Float("value").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),
+		field.Float("actual_value").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Optional().
+			Nillable(),
 		field.String("status").
 			MaxLen(20).
 			Default(service.StatusUnused),

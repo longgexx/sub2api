@@ -187,6 +187,18 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'purchase.description'
     }
   },
+  {
+    path: '/topup',
+    name: 'Topup',
+    component: () => import('@/views/user/TopupView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Top Up',
+      titleKey: 'payment.title',
+      descriptionKey: 'payment.description'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {
@@ -290,6 +302,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/redeem-rules',
+    name: 'AdminRedeemRules',
+    component: () => import('@/views/admin/RedeemRulesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Redeem Rules',
+      titleKey: 'admin.redeemRules.title',
+      descriptionKey: 'admin.redeemRules.description'
+    }
+  },
+  {
     path: '/admin/promo-codes',
     name: 'AdminPromoCodes',
     component: () => import('@/views/admin/PromoCodesView.vue'),
@@ -323,6 +347,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Usage Records',
       titleKey: 'admin.usage.title',
       descriptionKey: 'admin.usage.description'
+    }
+  },
+  {
+    path: '/admin/payment',
+    name: 'AdminPayment',
+    component: () => import('@/views/admin/PaymentOrdersView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Payment Orders',
+      titleKey: 'admin.payment.title',
+      descriptionKey: 'admin.payment.description'
     }
   },
 

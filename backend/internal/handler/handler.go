@@ -16,6 +16,7 @@ type AdminHandlers struct {
 	AntigravityOAuth *admin.AntigravityOAuthHandler
 	Proxy            *admin.ProxyHandler
 	Redeem           *admin.RedeemHandler
+	RedeemRule       *admin.RedeemRuleHandler
 	Promo            *admin.PromoHandler
 	Setting          *admin.SettingHandler
 	Ops              *admin.OpsHandler
@@ -23,6 +24,7 @@ type AdminHandlers struct {
 	Subscription     *admin.SubscriptionHandler
 	Usage            *admin.UsageHandler
 	UserAttribute    *admin.UserAttributeHandler
+	Payment          *admin.PaymentHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -38,6 +40,7 @@ type Handlers struct {
 	OpenAIGateway *OpenAIGatewayHandler
 	Setting       *SettingHandler
 	Totp          *TotpHandler
+	Payment       *PaymentHandler
 }
 
 // BuildInfo contains build-time information

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/alipay"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 )
@@ -209,6 +211,114 @@ func ProvideAPIKeyAuthCacheInvalidator(apiKeyService *APIKeyService) APIKeyAuthC
 	return apiKeyService
 }
 
+// ProvideAlipayClient 创建支付宝客户端
+func ProvideAlipayClient(cfg *config.Config) *alipay.Client {
+	if !cfg.Payment.Enabled {
+		println("[Alipay] Payment is disabled, skipping client initialization")
+		return nil
+	}
+
+	println("[Alipay] Initializing client...")
+	client, err := alipay.NewClient(cfg.Payment.Alipay)
+	if err != nil {
+		println("[Alipay] Client initialization failed:", err.Error())
+		return nil
+	}
+
+	// 打印配置状态
+	status := client.GetConfigStatus()
+	println("[Alipay] Configuration status:")
+	println("  - App ID:", status["app_id_masked"])
+	println("  - Private Key:", boolToConfigured(status["private_key_set"].(bool)))
+	println("  - Public Key:", boolToConfigured(status["public_key_set"].(bool)))
+	println("  - Server URL:", status["server_url"])
+
+	// 如果配置完整，尝试校验
+	if client.IsConfigured() {
+		println("[Alipay] Validating API credentials...")
+		if err := client.ValidateConfig(); err != nil {
+			println("[Alipay] WARNING: Configuration validation failed:", err.Error())
+			println("[Alipay] Payment monitoring may not work correctly. Please check your Alipay API credentials.")
+		} else {
+			println("[Alipay] API credentials validated successfully")
+		}
+	} else {
+		println("[Alipay] Client not fully configured, skipping API validation")
+	}
+
+	return client
+}
+
+// boolToConfigured 将布尔值转换为配置状态字符串
+func boolToConfigured(v bool) string {
+	if v {
+		return "configured"
+	}
+	return "not configured"
+}
+
+// ProvidePaymentMonitorService 创建并启动支付监控服务
+func ProvidePaymentMonitorService(
+	alipayClient *alipay.Client,
+	paymentService *PaymentService,
+	cfg *config.Config,
+) *PaymentMonitorService {
+	if !cfg.Payment.Enabled {
+		println("[PaymentMonitor] Payment is disabled, skipping monitor initialization")
+		return nil
+	}
+	if !cfg.Payment.Monitor.Enabled {
+		println("[PaymentMonitor] Payment monitor is disabled")
+		return nil
+	}
+	if alipayClient == nil {
+		println("[PaymentMonitor] Alipay client is not available, skipping monitor initialization")
+		return nil
+	}
+
+	println("[PaymentMonitor] Starting payment monitor service...")
+	println("  - Check interval:", cfg.Payment.Monitor.IntervalSeconds, "seconds")
+	println("  - Order timeout:", cfg.Payment.Monitor.OrderTimeoutMins, "minutes")
+	println("  - Min amount:", cfg.Payment.Monitor.MinAmount)
+	println("  - Max amount:", cfg.Payment.Monitor.MaxAmount)
+
+	svc := NewPaymentMonitorService(alipayClient, paymentService, cfg)
+	svc.Start()
+
+	println("[PaymentMonitor] Service started successfully")
+	return svc
+}
+
+// ProvideRedeemService 创建兑换码服务，包含规则和统计仓储
+func ProvideRedeemService(
+	redeemRepo RedeemCodeRepository,
+	userRepo UserRepository,
+	subscriptionService *SubscriptionService,
+	cache RedeemCache,
+	billingCacheService *BillingCacheService,
+	entClient *dbent.Client,
+	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	ruleRepo RedeemRuleRepository,
+	statRepo UserRedeemStatRepository,
+) *RedeemService {
+	return NewRedeemService(
+		redeemRepo,
+		userRepo,
+		subscriptionService,
+		cache,
+		billingCacheService,
+		entClient,
+		authCacheInvalidator,
+		ruleRepo,
+		statRepo,
+	)
+}
+
+// ProvideRedeemRuleService 创建兑换规则管理服务
+func ProvideRedeemRuleService(ruleRepo RedeemRuleFullRepository) *RedeemRuleService {
+	return NewRedeemRuleService(ruleRepo)
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
@@ -219,7 +329,8 @@ var ProviderSet = wire.NewSet(
 	NewGroupService,
 	NewAccountService,
 	NewProxyService,
-	NewRedeemService,
+	ProvideRedeemService,
+	ProvideRedeemRuleService,
 	NewPromoService,
 	NewUsageService,
 	NewDashboardService,
@@ -272,4 +383,7 @@ var ProviderSet = wire.NewSet(
 	NewUserAttributeService,
 	NewUsageCache,
 	NewTotpService,
+	NewPaymentService,
+	ProvideAlipayClient,
+	ProvidePaymentMonitorService,
 )

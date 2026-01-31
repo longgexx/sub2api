@@ -56,6 +56,10 @@ type SystemSettings struct {
 	OpsRealtimeMonitoringEnabled bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    int    `json:"ops_metrics_interval_seconds"`
+
+	// Payment settings
+	PaymentQRCode          string  `json:"payment_qr_code"`
+	PaymentRateCoefficient float64 `json:"payment_rate_coefficient"`
 }
 
 type PublicSettings struct {

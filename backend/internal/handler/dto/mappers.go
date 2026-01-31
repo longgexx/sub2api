@@ -360,6 +360,7 @@ func redeemCodeFromServiceBase(rc *service.RedeemCode) RedeemCode {
 		Code:         rc.Code,
 		Type:         rc.Type,
 		Value:        rc.Value,
+		ActualValue:  rc.ActualValue,
 		Status:       rc.Status,
 		UsedBy:       rc.UsedBy,
 		UsedAt:       rc.UsedAt,
@@ -368,6 +369,43 @@ func redeemCodeFromServiceBase(rc *service.RedeemCode) RedeemCode {
 		ValidityDays: rc.ValidityDays,
 		User:         UserFromServiceShallow(rc.User),
 		Group:        GroupFromServiceShallow(rc.Group),
+	}
+}
+
+// RedeemResultFromService converts a service RedeemResult to DTO.
+func RedeemResultFromService(r *service.RedeemResult) *RedeemResult {
+	if r == nil {
+		return nil
+	}
+	var code RedeemCode
+	if r.RedeemCode != nil {
+		code = redeemCodeFromServiceBase(r.RedeemCode)
+	}
+	return &RedeemResult{
+		RedeemCode:    code,
+		OriginalValue: r.OriginalValue,
+		ActualValue:   r.ActualValue,
+		IsDegraded:    r.IsDegraded,
+		Message:       r.Message,
+	}
+}
+
+// RedeemPreviewFromService converts a service RedeemPreview to DTO.
+func RedeemPreviewFromService(p *service.RedeemPreview) *RedeemPreview {
+	if p == nil {
+		return nil
+	}
+	var code RedeemCode
+	if p.RedeemCode != nil {
+		code = redeemCodeFromServiceBase(p.RedeemCode)
+	}
+	return &RedeemPreview{
+		RedeemCode:     code,
+		OriginalValue:  p.OriginalValue,
+		ActualValue:    p.ActualValue,
+		WillDegrade:    p.WillDegrade,
+		NeedsConfirm:   p.NeedsConfirm,
+		ConfirmMessage: p.ConfirmMessage,
 	}
 }
 

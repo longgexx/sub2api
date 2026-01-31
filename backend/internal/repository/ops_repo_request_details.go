@@ -77,6 +77,11 @@ func (r *opsRepository) ListRequestDetails(ctx context.Context, filter *service.
 		if filter.MaxDurationMs != nil {
 			addCondition(fmt.Sprintf("duration_ms <= $%d", len(args)+1), *filter.MaxDurationMs)
 		}
+
+		if userQuery := strings.TrimSpace(filter.UserQuery); userQuery != "" {
+			like := "%" + strings.ToLower(userQuery) + "%"
+			addCondition(fmt.Sprintf("LOWER(COALESCE(user_email,'')) LIKE $%d", len(args)+1), like)
+		}
 	}
 
 	where := ""
@@ -102,10 +107,13 @@ WITH combined AS (
     ul.api_key_id AS api_key_id,
     ul.account_id AS account_id,
     ul.group_id AS group_id,
-    ul.stream AS stream
+    ul.stream AS stream,
+    COALESCE(a.name, '') AS account_name,
+    COALESCE(u.email, '') AS user_email
   FROM usage_logs ul
   LEFT JOIN groups g ON g.id = ul.group_id
   LEFT JOIN accounts a ON a.id = ul.account_id
+  LEFT JOIN users u ON u.id = ul.user_id
   WHERE ul.created_at >= $1 AND ul.created_at < $2
 
   UNION ALL
@@ -126,10 +134,13 @@ WITH combined AS (
     o.api_key_id AS api_key_id,
     o.account_id AS account_id,
     o.group_id AS group_id,
-    o.stream AS stream
+    o.stream AS stream,
+    COALESCE(a.name, '') AS account_name,
+    COALESCE(u.email, '') AS user_email
   FROM ops_error_logs o
   LEFT JOIN groups g ON g.id = o.group_id
   LEFT JOIN accounts a ON a.id = o.account_id
+  LEFT JOIN users u ON u.id = o.user_id
   WHERE o.created_at >= $1 AND o.created_at < $2
     AND COALESCE(o.status_code, 0) >= 400
 )
@@ -175,7 +186,9 @@ SELECT
   api_key_id,
   account_id,
   group_id,
-  stream
+  stream,
+  account_name,
+  user_email
 FROM combined
 %s
 %s
@@ -227,6 +240,9 @@ LIMIT $%d OFFSET $%d
 			groupID   sql.NullInt64
 
 			stream bool
+
+			accountName sql.NullString
+			userEmail   sql.NullString
 		)
 
 		if err := rows.Scan(
@@ -246,6 +262,8 @@ LIMIT $%d OFFSET $%d
 			&accountID,
 			&groupID,
 			&stream,
+			&accountName,
+			&userEmail,
 		); err != nil {
 			return nil, 0, err
 		}
@@ -268,6 +286,9 @@ LIMIT $%d OFFSET $%d
 			APIKeyID:  toInt64Ptr(apiKeyID),
 			AccountID: toInt64Ptr(accountID),
 			GroupID:   toInt64Ptr(groupID),
+
+			AccountName: strings.TrimSpace(accountName.String),
+			UserEmail:   strings.TrimSpace(userEmail.String),
 
 			Stream: stream,
 		}

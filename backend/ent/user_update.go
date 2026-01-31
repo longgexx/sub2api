@@ -13,12 +13,14 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userredeemstat"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -361,6 +363,36 @@ func (_u *UserUpdate) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 	return _u.AddPromoCodeUsageIDs(ids...)
 }
 
+// AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
+func (_u *UserUpdate) AddPaymentOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddPaymentOrderIDs(ids...)
+	return _u
+}
+
+// AddPaymentOrders adds the "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdate) AddPaymentOrders(v ...*PaymentOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentOrderIDs(ids...)
+}
+
+// AddRedeemStatIDs adds the "redeem_stats" edge to the UserRedeemStat entity by IDs.
+func (_u *UserUpdate) AddRedeemStatIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddRedeemStatIDs(ids...)
+	return _u
+}
+
+// AddRedeemStats adds the "redeem_stats" edges to the UserRedeemStat entity.
+func (_u *UserUpdate) AddRedeemStats(v ...*UserRedeemStat) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRedeemStatIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -532,6 +564,48 @@ func (_u *UserUpdate) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoCodeUsageIDs(ids...)
+}
+
+// ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdate) ClearPaymentOrders() *UserUpdate {
+	_u.mutation.ClearPaymentOrders()
+	return _u
+}
+
+// RemovePaymentOrderIDs removes the "payment_orders" edge to PaymentOrder entities by IDs.
+func (_u *UserUpdate) RemovePaymentOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemovePaymentOrderIDs(ids...)
+	return _u
+}
+
+// RemovePaymentOrders removes "payment_orders" edges to PaymentOrder entities.
+func (_u *UserUpdate) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentOrderIDs(ids...)
+}
+
+// ClearRedeemStats clears all "redeem_stats" edges to the UserRedeemStat entity.
+func (_u *UserUpdate) ClearRedeemStats() *UserUpdate {
+	_u.mutation.ClearRedeemStats()
+	return _u
+}
+
+// RemoveRedeemStatIDs removes the "redeem_stats" edge to UserRedeemStat entities by IDs.
+func (_u *UserUpdate) RemoveRedeemStatIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveRedeemStatIDs(ids...)
+	return _u
+}
+
+// RemoveRedeemStats removes "redeem_stats" edges to UserRedeemStat entities.
+func (_u *UserUpdate) RemoveRedeemStats(v ...*UserRedeemStat) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRedeemStatIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1044,6 +1118,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentOrdersIDs(); len(nodes) > 0 && !_u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RedeemStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRedeemStatsIDs(); len(nodes) > 0 && !_u.mutation.RedeemStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RedeemStatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1390,6 +1554,36 @@ func (_u *UserUpdateOne) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdateOne
 	return _u.AddPromoCodeUsageIDs(ids...)
 }
 
+// AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
+func (_u *UserUpdateOne) AddPaymentOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddPaymentOrderIDs(ids...)
+	return _u
+}
+
+// AddPaymentOrders adds the "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdateOne) AddPaymentOrders(v ...*PaymentOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentOrderIDs(ids...)
+}
+
+// AddRedeemStatIDs adds the "redeem_stats" edge to the UserRedeemStat entity by IDs.
+func (_u *UserUpdateOne) AddRedeemStatIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddRedeemStatIDs(ids...)
+	return _u
+}
+
+// AddRedeemStats adds the "redeem_stats" edges to the UserRedeemStat entity.
+func (_u *UserUpdateOne) AddRedeemStats(v ...*UserRedeemStat) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRedeemStatIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -1561,6 +1755,48 @@ func (_u *UserUpdateOne) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoCodeUsageIDs(ids...)
+}
+
+// ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdateOne) ClearPaymentOrders() *UserUpdateOne {
+	_u.mutation.ClearPaymentOrders()
+	return _u
+}
+
+// RemovePaymentOrderIDs removes the "payment_orders" edge to PaymentOrder entities by IDs.
+func (_u *UserUpdateOne) RemovePaymentOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemovePaymentOrderIDs(ids...)
+	return _u
+}
+
+// RemovePaymentOrders removes "payment_orders" edges to PaymentOrder entities.
+func (_u *UserUpdateOne) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentOrderIDs(ids...)
+}
+
+// ClearRedeemStats clears all "redeem_stats" edges to the UserRedeemStat entity.
+func (_u *UserUpdateOne) ClearRedeemStats() *UserUpdateOne {
+	_u.mutation.ClearRedeemStats()
+	return _u
+}
+
+// RemoveRedeemStatIDs removes the "redeem_stats" edge to UserRedeemStat entities by IDs.
+func (_u *UserUpdateOne) RemoveRedeemStatIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveRedeemStatIDs(ids...)
+	return _u
+}
+
+// RemoveRedeemStats removes "redeem_stats" edges to UserRedeemStat entities.
+func (_u *UserUpdateOne) RemoveRedeemStats(v ...*UserRedeemStat) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRedeemStatIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -2096,6 +2332,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentOrdersIDs(); len(nodes) > 0 && !_u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RedeemStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRedeemStatsIDs(); len(nodes) > 0 && !_u.mutation.RedeemStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RedeemStatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RedeemStatsTable,
+			Columns: []string{user.RedeemStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

@@ -55,6 +55,11 @@ var ProviderSet = wire.NewSet(
 	NewAccountRepository,
 	NewProxyRepository,
 	NewRedeemCodeRepository,
+	NewRedeemRuleRepository,
+	wire.Bind(new(service.RedeemRuleRepository), new(RedeemRuleRepository)),
+	wire.Bind(new(service.RedeemRuleFullRepository), new(RedeemRuleRepository)),
+	NewUserRedeemStatRepository,
+	wire.Bind(new(service.UserRedeemStatRepository), new(UserRedeemStatRepository)),
 	NewPromoCodeRepository,
 	NewUsageLogRepository,
 	NewUsageCleanupRepository,
@@ -64,6 +69,8 @@ var ProviderSet = wire.NewSet(
 	NewUserSubscriptionRepository,
 	NewUserAttributeDefinitionRepository,
 	NewUserAttributeValueRepository,
+	NewPaymentOrderRepository,
+	wire.Bind(new(service.PaymentOrderRepository), new(*paymentOrderRepository)),
 
 	// Cache implementations
 	NewGatewayCache,

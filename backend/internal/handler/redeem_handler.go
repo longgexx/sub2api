@@ -23,7 +23,8 @@ func NewRedeemHandler(redeemService *service.RedeemService) *RedeemHandler {
 
 // RedeemRequest represents the redeem code request payload
 type RedeemRequest struct {
-	Code string `json:"code" binding:"required"`
+	Code    string `json:"code" binding:"required"`
+	Confirm bool   `json:"confirm"` // 是否确认降级兑换
 }
 
 // RedeemResponse represents the redeem response
@@ -33,6 +34,30 @@ type RedeemResponse struct {
 	Value          float64  `json:"value"`
 	NewBalance     *float64 `json:"new_balance,omitempty"`
 	NewConcurrency *int     `json:"new_concurrency,omitempty"`
+}
+
+// PreviewRedeem handles previewing a redeem code (check if it needs confirmation)
+// POST /api/v1/redeem/preview
+func (h *RedeemHandler) PreviewRedeem(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	var req RedeemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	preview, err := h.redeemService.PreviewRedeem(c.Request.Context(), subject.UserID, req.Code)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, dto.RedeemPreviewFromService(preview))
 }
 
 // Redeem handles redeeming a code
@@ -50,13 +75,29 @@ func (h *RedeemHandler) Redeem(c *gin.Context) {
 		return
 	}
 
+	// 如果没有确认，先预检
+	if !req.Confirm {
+		preview, err := h.redeemService.PreviewRedeem(c.Request.Context(), subject.UserID, req.Code)
+		if err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+
+		// 如果需要确认，返回预检结果
+		if preview.NeedsConfirm {
+			response.Success(c, dto.RedeemPreviewFromService(preview))
+			return
+		}
+	}
+
+	// 执行实际兑换
 	result, err := h.redeemService.Redeem(c.Request.Context(), subject.UserID, req.Code)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 
-	response.Success(c, dto.RedeemCodeFromService(result))
+	response.Success(c, dto.RedeemResultFromService(result))
 }
 
 // GetHistory returns the user's redemption history

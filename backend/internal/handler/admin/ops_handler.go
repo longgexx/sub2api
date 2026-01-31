@@ -641,6 +641,7 @@ func (h *OpsHandler) ListRequestDetails(c *gin.Context) {
 	filter.RequestID = strings.TrimSpace(c.Query("request_id"))
 	filter.Query = strings.TrimSpace(c.Query("q"))
 	filter.Sort = strings.TrimSpace(c.Query("sort"))
+	filter.UserQuery = strings.TrimSpace(c.Query("user_query"))
 
 	if v := strings.TrimSpace(c.Query("user_id")); v != "" {
 		id, err := strconv.ParseInt(v, 10, 64)

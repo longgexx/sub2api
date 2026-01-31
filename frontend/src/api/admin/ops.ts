@@ -184,6 +184,9 @@ export interface OpsRequestDetail {
   account_id?: number | null
   group_id?: number | null
 
+  account_name?: string
+  user_email?: string
+
   stream?: boolean
 }
 
@@ -204,6 +207,7 @@ export interface OpsRequestDetailsParams {
   model?: string
   request_id?: string
   q?: string
+  user_query?: string
 
   min_duration_ms?: number
   max_duration_ms?: number

@@ -78,31 +78,134 @@
         </div>
       </div>
 
+      <!-- Confirmation Dialog for Degraded Redemption -->
+      <transition name="fade">
+        <div
+          v-if="showConfirmDialog && confirmPreview"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          @click.self="handleCancelConfirm"
+        >
+          <div class="card w-full max-w-md border-amber-200 bg-white dark:border-amber-800/50 dark:bg-dark-800">
+            <div class="p-6">
+              <div class="flex items-start gap-4">
+                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                  <Icon name="exclamationCircle" size="lg" class="text-amber-600 dark:text-amber-400" />
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ t('redeem.confirmTitle') }}
+                  </h3>
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    {{ confirmPreview.confirm_message }}
+                  </p>
+                  <div class="mt-4 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
+                    <div class="flex justify-between text-sm">
+                      <span class="text-amber-700 dark:text-amber-400">{{ t('redeem.originalValue') }}:</span>
+                      <span class="font-medium text-amber-800 dark:text-amber-300">${{ confirmPreview.original_value.toFixed(2) }}</span>
+                    </div>
+                    <div class="mt-1 flex justify-between text-sm">
+                      <span class="text-amber-700 dark:text-amber-400">{{ t('redeem.actualValue') }}:</span>
+                      <span class="font-medium text-amber-800 dark:text-amber-300">${{ confirmPreview.actual_value.toFixed(2) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  :disabled="confirming"
+                  class="btn btn-secondary flex-1"
+                  @click="handleCancelConfirm"
+                >
+                  {{ t('common.cancel') }}
+                </button>
+                <button
+                  type="button"
+                  :disabled="confirming"
+                  class="btn btn-warning flex-1"
+                  @click="handleConfirmRedeem"
+                >
+                  <svg
+                    v-if="confirming"
+                    class="-ml-1 mr-2 h-5 w-5 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {{ confirming ? t('redeem.redeeming') : t('redeem.confirmRedeem') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <!-- Success Message -->
       <transition name="fade">
         <div
           v-if="redeemResult"
-          class="card border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-900/20"
+          :class="[
+            'card',
+            redeemResult.is_degraded
+              ? 'border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-900/20'
+              : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-900/20'
+          ]"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30"
+                :class="[
+                  'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
+                  redeemResult.is_degraded
+                    ? 'bg-amber-100 dark:bg-amber-900/30'
+                    : 'bg-emerald-100 dark:bg-emerald-900/30'
+                ]"
               >
-                <Icon name="checkCircle" size="md" class="text-emerald-600 dark:text-emerald-400" />
+                <Icon
+                  name="checkCircle"
+                  size="md"
+                  :class="
+                    redeemResult.is_degraded
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-emerald-600 dark:text-emerald-400'
+                  "
+                />
               </div>
               <div class="flex-1">
-                <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                <h3
+                  :class="[
+                    'text-sm font-semibold',
+                    redeemResult.is_degraded
+                      ? 'text-amber-800 dark:text-amber-300'
+                      : 'text-emerald-800 dark:text-emerald-300'
+                  ]"
+                >
                   {{ t('redeem.redeemSuccess') }}
                 </h3>
-                <div class="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
-                  <p>{{ redeemResult.message }}</p>
+                <div
+                  :class="[
+                    'mt-2 text-sm',
+                    redeemResult.is_degraded
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-emerald-700 dark:text-emerald-400'
+                  ]"
+                >
                   <div class="mt-3 space-y-1">
                     <p v-if="redeemResult.type === 'balance'" class="font-medium">
-                      {{ t('redeem.added') }}: ${{ redeemResult.value.toFixed(2) }}
+                      {{ t('redeem.added') }}: ${{ redeemResult.actual_value.toFixed(2) }}
+                      <span
+                        v-if="redeemResult.is_degraded"
+                        class="ml-2 text-xs font-normal opacity-80"
+                      >
+                        ({{ t('redeem.originalValue') }}: ${{
+                          redeemResult.original_value.toFixed(2)
+                        }})
+                      </span>
                     </p>
                     <p v-else-if="redeemResult.type === 'concurrency'" class="font-medium">
-                      {{ t('redeem.added') }}: {{ redeemResult.value }}
+                      {{ t('redeem.added') }}: {{ redeemResult.actual_value }}
                       {{ t('redeem.concurrentRequests') }}
                     </p>
                     <p v-else-if="redeemResult.type === 'subscription'" class="font-medium">
@@ -114,15 +217,18 @@
                         }})</span
                       >
                     </p>
-                    <p v-if="redeemResult.new_balance !== undefined">
-                      {{ t('redeem.newBalance') }}:
-                      <span class="font-semibold">${{ redeemResult.new_balance.toFixed(2) }}</span>
-                    </p>
-                    <p v-if="redeemResult.new_concurrency !== undefined">
-                      {{ t('redeem.newConcurrency') }}:
-                      <span class="font-semibold"
-                        >{{ redeemResult.new_concurrency }} {{ t('redeem.requests') }}</span
-                      >
+                  </div>
+                  <!-- Degradation explanation -->
+                  <p v-if="redeemResult.is_degraded && redeemResult.message" class="mt-3 text-xs">
+                    {{ redeemResult.message }}
+                  </p>
+                  <!-- Upgrade prompt for degraded users -->
+                  <div
+                    v-if="redeemResult.is_degraded"
+                    class="mt-4 rounded-lg bg-white/50 p-3 dark:bg-black/20"
+                  >
+                    <p class="text-xs">
+                      {{ t('redeem.trialUsed') }}
                     </p>
                   </div>
                 </div>
@@ -339,7 +445,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useSubscriptionStore } from '@/stores/subscriptions'
-import { redeemAPI, authAPI, type RedeemHistoryItem } from '@/api'
+import { redeemAPI, authAPI, type RedeemHistoryItem, isRedeemPreview, isRedeemResult } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime } from '@/utils/format'
@@ -354,15 +460,25 @@ const user = computed(() => authStore.user)
 const redeemCode = ref('')
 const submitting = ref(false)
 const redeemResult = ref<{
-  message: string
   type: string
-  value: number
-  new_balance?: number
-  new_concurrency?: number
+  actual_value: number
+  original_value: number
+  is_degraded: boolean
+  message?: string
   group_name?: string
   validity_days?: number
 } | null>(null)
 const errorMessage = ref('')
+
+// 确认对话框状态
+const showConfirmDialog = ref(false)
+const confirmPreview = ref<{
+  code: string
+  original_value: number
+  actual_value: number
+  confirm_message: string
+} | null>(null)
+const confirming = ref(false)
 
 // History data
 const history = ref<RedeemHistoryItem[]>([])
@@ -399,8 +515,10 @@ const getHistoryItemTitle = (item: RedeemHistoryItem) => {
 
 const formatHistoryValue = (item: RedeemHistoryItem) => {
   if (isBalanceType(item.type)) {
-    const sign = item.value >= 0 ? '+' : ''
-    return `${sign}$${item.value.toFixed(2)}`
+    // 优先使用 actual_value（实际到账金额），如果没有则使用 value（原始面值）
+    const displayValue = item.actual_value ?? item.value
+    const sign = displayValue >= 0 ? '+' : ''
+    return `${sign}$${displayValue.toFixed(2)}`
   } else if (isSubscriptionType(item.type)) {
     // 订阅类型显示有效天数和分组名称
     const days = item.validity_days || Math.round(item.value)
@@ -434,38 +552,96 @@ const handleRedeem = async () => {
   redeemResult.value = null
 
   try {
-    const result = await redeemAPI.redeem(redeemCode.value.trim())
+    const response = await redeemAPI.redeem(redeemCode.value.trim())
 
-    redeemResult.value = result
-
-    // Refresh user data to get updated balance/concurrency
-    await authStore.refreshUser()
-
-    // If subscription type, immediately refresh subscription status
-    if (result.type === 'subscription') {
-      try {
-        await subscriptionStore.fetchActiveSubscriptions(true) // force refresh
-      } catch (error) {
-        console.error('Failed to refresh subscriptions after redeem:', error)
-        appStore.showWarning(t('redeem.subscriptionRefreshFailed'))
+    // 检查是否需要用户确认（降级兑换）
+    if (isRedeemPreview(response)) {
+      confirmPreview.value = {
+        code: redeemCode.value.trim(),
+        original_value: response.original_value,
+        actual_value: response.actual_value,
+        confirm_message: response.confirm_message || t('redeem.confirmDegradedRedeem')
       }
+      showConfirmDialog.value = true
+      return
     }
 
-    // Clear the input
-    redeemCode.value = ''
-
-    // Refresh history
-    await fetchHistory()
-
-    // Show success toast
-    appStore.showSuccess(t('redeem.codeRedeemSuccess'))
+    // 直接兑换成功
+    if (isRedeemResult(response)) {
+      handleRedeemSuccess(response)
+    }
   } catch (error: any) {
     errorMessage.value = error.response?.data?.detail || t('redeem.failedToRedeem')
-
     appStore.showError(t('redeem.redeemFailed'))
   } finally {
     submitting.value = false
   }
+}
+
+// 用户确认降级兑换
+const handleConfirmRedeem = async () => {
+  if (!confirmPreview.value) return
+
+  confirming.value = true
+  try {
+    const response = await redeemAPI.redeem(confirmPreview.value.code, true)
+
+    if (isRedeemResult(response)) {
+      handleRedeemSuccess(response)
+    }
+
+    showConfirmDialog.value = false
+    confirmPreview.value = null
+  } catch (error: any) {
+    errorMessage.value = error.response?.data?.detail || t('redeem.failedToRedeem')
+    appStore.showError(t('redeem.redeemFailed'))
+    showConfirmDialog.value = false
+    confirmPreview.value = null
+  } finally {
+    confirming.value = false
+  }
+}
+
+// 用户取消降级兑换
+const handleCancelConfirm = () => {
+  showConfirmDialog.value = false
+  confirmPreview.value = null
+  appStore.showInfo(t('redeem.redeemCanceled'))
+}
+
+// 处理兑换成功
+const handleRedeemSuccess = async (result: any) => {
+  redeemResult.value = {
+    type: result.redeem_code.type,
+    actual_value: result.actual_value,
+    original_value: result.original_value,
+    is_degraded: result.is_degraded,
+    message: result.message,
+    group_name: result.redeem_code.group?.name,
+    validity_days: result.redeem_code.validity_days
+  }
+
+  // Refresh user data to get updated balance/concurrency
+  await authStore.refreshUser()
+
+  // If subscription type, immediately refresh subscription status
+  if (result.redeem_code.type === 'subscription') {
+    try {
+      await subscriptionStore.fetchActiveSubscriptions(true) // force refresh
+    } catch (error) {
+      console.error('Failed to refresh subscriptions after redeem:', error)
+      appStore.showWarning(t('redeem.subscriptionRefreshFailed'))
+    }
+  }
+
+  // Clear the input
+  redeemCode.value = ''
+
+  // Refresh history
+  await fetchHistory()
+
+  // Show success toast
+  appStore.showSuccess(t('redeem.codeRedeemSuccess'))
 }
 
 onMounted(async () => {

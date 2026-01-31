@@ -70,6 +70,11 @@ func Value(v float64) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldValue, v))
 }
 
+// ActualValue applies equality check predicate on the "actual_value" field. It's identical to ActualValueEQ.
+func ActualValue(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldActualValue, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldStatus, v))
@@ -273,6 +278,56 @@ func ValueLT(v float64) predicate.RedeemCode {
 // ValueLTE applies the LTE predicate on the "value" field.
 func ValueLTE(v float64) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldLTE(FieldValue, v))
+}
+
+// ActualValueEQ applies the EQ predicate on the "actual_value" field.
+func ActualValueEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldActualValue, v))
+}
+
+// ActualValueNEQ applies the NEQ predicate on the "actual_value" field.
+func ActualValueNEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldActualValue, v))
+}
+
+// ActualValueIn applies the In predicate on the "actual_value" field.
+func ActualValueIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldActualValue, vs...))
+}
+
+// ActualValueNotIn applies the NotIn predicate on the "actual_value" field.
+func ActualValueNotIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldActualValue, vs...))
+}
+
+// ActualValueGT applies the GT predicate on the "actual_value" field.
+func ActualValueGT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldActualValue, v))
+}
+
+// ActualValueGTE applies the GTE predicate on the "actual_value" field.
+func ActualValueGTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldActualValue, v))
+}
+
+// ActualValueLT applies the LT predicate on the "actual_value" field.
+func ActualValueLT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldActualValue, v))
+}
+
+// ActualValueLTE applies the LTE predicate on the "actual_value" field.
+func ActualValueLTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldActualValue, v))
+}
+
+// ActualValueIsNil applies the IsNil predicate on the "actual_value" field.
+func ActualValueIsNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIsNull(FieldActualValue))
+}
+
+// ActualValueNotNil applies the NotNil predicate on the "actual_value" field.
+func ActualValueNotNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotNull(FieldActualValue))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

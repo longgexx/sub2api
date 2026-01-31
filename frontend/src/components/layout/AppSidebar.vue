@@ -431,6 +431,7 @@ const userNavItems = computed(() => {
           }
         ]
       : []),
+    { path: '/topup', label: t('nav.topup'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
@@ -453,6 +454,7 @@ const personalNavItems = computed(() => {
           }
         ]
       : []),
+    { path: '/topup', label: t('nav.topup'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
@@ -472,7 +474,9 @@ const adminNavItems = computed(() => {
     { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
     { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon },
     { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
+    { path: '/admin/redeem-rules', label: t('nav.redeemRules'), icon: CogIcon, hideInSimpleMode: true },
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/admin/payment', label: t('nav.paymentOrders'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
   ]
 

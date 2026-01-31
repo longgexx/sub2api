@@ -13,9 +13,16 @@ export { authAPI, isTotp2FARequired, type LoginResponse } from './auth'
 export { keysAPI } from './keys'
 export { usageAPI } from './usage'
 export { userAPI } from './user'
-export { redeemAPI, type RedeemHistoryItem } from './redeem'
+export { redeemAPI, type RedeemHistoryItem, type RedeemResult, type RedeemPreview, isRedeemPreview, isRedeemResult } from './redeem'
 export { userGroupsAPI } from './groups'
 export { totpAPI } from './totp'
+export {
+  paymentAPI,
+  type PaymentOrder,
+  type PaymentConfig,
+  type PaymentStats,
+  type MonitorStatus
+} from './payment'
 
 // Admin APIs
 export { adminAPI } from './admin'

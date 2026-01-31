@@ -79,6 +79,33 @@ func (_u *RedeemCodeUpdate) AddValue(v float64) *RedeemCodeUpdate {
 	return _u
 }
 
+// SetActualValue sets the "actual_value" field.
+func (_u *RedeemCodeUpdate) SetActualValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.ResetActualValue()
+	_u.mutation.SetActualValue(v)
+	return _u
+}
+
+// SetNillableActualValue sets the "actual_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableActualValue(v *float64) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetActualValue(*v)
+	}
+	return _u
+}
+
+// AddActualValue adds value to the "actual_value" field.
+func (_u *RedeemCodeUpdate) AddActualValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.AddActualValue(v)
+	return _u
+}
+
+// ClearActualValue clears the value of the "actual_value" field.
+func (_u *RedeemCodeUpdate) ClearActualValue() *RedeemCodeUpdate {
+	_u.mutation.ClearActualValue()
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *RedeemCodeUpdate) SetStatus(v string) *RedeemCodeUpdate {
 	_u.mutation.SetStatus(v)
@@ -306,6 +333,15 @@ func (_u *RedeemCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.AddedValue(); ok {
 		_spec.AddField(redeemcode.FieldValue, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.ActualValue(); ok {
+		_spec.SetField(redeemcode.FieldActualValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedActualValue(); ok {
+		_spec.AddField(redeemcode.FieldActualValue, field.TypeFloat64, value)
+	}
+	if _u.mutation.ActualValueCleared() {
+		_spec.ClearField(redeemcode.FieldActualValue, field.TypeFloat64)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)
 	}
@@ -451,6 +487,33 @@ func (_u *RedeemCodeUpdateOne) SetNillableValue(v *float64) *RedeemCodeUpdateOne
 // AddValue adds value to the "value" field.
 func (_u *RedeemCodeUpdateOne) AddValue(v float64) *RedeemCodeUpdateOne {
 	_u.mutation.AddValue(v)
+	return _u
+}
+
+// SetActualValue sets the "actual_value" field.
+func (_u *RedeemCodeUpdateOne) SetActualValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.ResetActualValue()
+	_u.mutation.SetActualValue(v)
+	return _u
+}
+
+// SetNillableActualValue sets the "actual_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableActualValue(v *float64) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetActualValue(*v)
+	}
+	return _u
+}
+
+// AddActualValue adds value to the "actual_value" field.
+func (_u *RedeemCodeUpdateOne) AddActualValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.AddActualValue(v)
+	return _u
+}
+
+// ClearActualValue clears the value of the "actual_value" field.
+func (_u *RedeemCodeUpdateOne) ClearActualValue() *RedeemCodeUpdateOne {
+	_u.mutation.ClearActualValue()
 	return _u
 }
 
@@ -710,6 +773,15 @@ func (_u *RedeemCodeUpdateOne) sqlSave(ctx context.Context) (_node *RedeemCode, 
 	}
 	if value, ok := _u.mutation.AddedValue(); ok {
 		_spec.AddField(redeemcode.FieldValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.ActualValue(); ok {
+		_spec.SetField(redeemcode.FieldActualValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedActualValue(); ok {
+		_spec.AddField(redeemcode.FieldActualValue, field.TypeFloat64, value)
+	}
+	if _u.mutation.ActualValueCleared() {
+		_spec.ClearField(redeemcode.FieldActualValue, field.TypeFloat64)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)

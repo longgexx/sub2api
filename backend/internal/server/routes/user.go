@@ -79,5 +79,15 @@ func RegisterUserRoutes(
 			subscriptions.GET("/progress", h.Subscription.GetProgress)
 			subscriptions.GET("/summary", h.Subscription.GetSummary)
 		}
+
+		// 支付充值
+		payment := authenticated.Group("/payment")
+		{
+			payment.GET("/config", h.Payment.GetConfig)
+			payment.POST("/orders", h.Payment.CreateOrder)
+			payment.GET("/orders", h.Payment.ListOrders)
+			payment.GET("/orders/:trade_no", h.Payment.GetOrder)
+			payment.DELETE("/orders/:trade_no", h.Payment.CancelOrder)
+		}
 	}
 }

@@ -37,6 +37,9 @@ type OpsRequestDetail struct {
 	AccountID *int64 `json:"account_id,omitempty"`
 	GroupID   *int64 `json:"group_id,omitempty"`
 
+	AccountName string `json:"account_name,omitempty"`
+	UserEmail   string `json:"user_email,omitempty"`
+
 	Stream bool `json:"stream"`
 }
 
@@ -57,6 +60,7 @@ type OpsRequestDetailFilter struct {
 	Model     string
 	RequestID string
 	Query     string
+	UserQuery string // 用于按用户邮箱模糊搜索
 
 	MinDurationMs *int
 	MaxDurationMs *int

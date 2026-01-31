@@ -76,7 +76,7 @@ func (r *redeemCodeRepository) GetByID(ctx context.Context, id int64) (*service.
 
 func (r *redeemCodeRepository) GetByCode(ctx context.Context, code string) (*service.RedeemCode, error) {
 	m, err := r.client.RedeemCode.Query().
-		Where(redeemcode.CodeEQ(code)).
+		Where(redeemcode.CodeEqualFold(code)).
 		Only(ctx)
 	if err != nil {
 		if dbent.IsNotFound(err) {
@@ -166,7 +166,7 @@ func (r *redeemCodeRepository) Update(ctx context.Context, code *service.RedeemC
 	return nil
 }
 
-func (r *redeemCodeRepository) Use(ctx context.Context, id, userID int64) error {
+func (r *redeemCodeRepository) Use(ctx context.Context, id, userID int64, actualValue float64) error {
 	now := time.Now()
 	client := clientFromContext(ctx, r.client)
 	affected, err := client.RedeemCode.Update().
@@ -174,6 +174,7 @@ func (r *redeemCodeRepository) Use(ctx context.Context, id, userID int64) error 
 		SetStatus(service.StatusUsed).
 		SetUsedBy(userID).
 		SetUsedAt(now).
+		SetActualValue(actualValue).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -211,6 +212,7 @@ func redeemCodeEntityToService(m *dbent.RedeemCode) *service.RedeemCode {
 		Code:         m.Code,
 		Type:         m.Type,
 		Value:        m.Value,
+		ActualValue:  m.ActualValue,
 		Status:       m.Status,
 		UsedBy:       m.UsedBy,
 		UsedAt:       m.UsedAt,

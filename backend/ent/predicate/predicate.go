@@ -18,6 +18,9 @@ type AccountGroup func(*sql.Selector)
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 
+// PaymentOrder is the predicate function for paymentorder builders.
+type PaymentOrder func(*sql.Selector)
+
 // PromoCode is the predicate function for promocode builders.
 type PromoCode func(*sql.Selector)
 
@@ -29,6 +32,9 @@ type Proxy func(*sql.Selector)
 
 // RedeemCode is the predicate function for redeemcode builders.
 type RedeemCode func(*sql.Selector)
+
+// RedeemRule is the predicate function for redeemrule builders.
+type RedeemRule func(*sql.Selector)
 
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
@@ -50,6 +56,9 @@ type UserAttributeDefinition func(*sql.Selector)
 
 // UserAttributeValue is the predicate function for userattributevalue builders.
 type UserAttributeValue func(*sql.Selector)
+
+// UserRedeemStat is the predicate function for userredeemstat builders.
+type UserRedeemStat func(*sql.Selector)
 
 // UserSubscription is the predicate function for usersubscription builders.
 type UserSubscription func(*sql.Selector)

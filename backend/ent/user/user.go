@@ -59,6 +59,10 @@ const (
 	EdgeAttributeValues = "attribute_values"
 	// EdgePromoCodeUsages holds the string denoting the promo_code_usages edge name in mutations.
 	EdgePromoCodeUsages = "promo_code_usages"
+	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
+	EdgePaymentOrders = "payment_orders"
+	// EdgeRedeemStats holds the string denoting the redeem_stats edge name in mutations.
+	EdgeRedeemStats = "redeem_stats"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -117,6 +121,20 @@ const (
 	PromoCodeUsagesInverseTable = "promo_code_usages"
 	// PromoCodeUsagesColumn is the table column denoting the promo_code_usages relation/edge.
 	PromoCodeUsagesColumn = "user_id"
+	// PaymentOrdersTable is the table that holds the payment_orders relation/edge.
+	PaymentOrdersTable = "payment_orders"
+	// PaymentOrdersInverseTable is the table name for the PaymentOrder entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentorder" package.
+	PaymentOrdersInverseTable = "payment_orders"
+	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
+	PaymentOrdersColumn = "user_id"
+	// RedeemStatsTable is the table that holds the redeem_stats relation/edge.
+	RedeemStatsTable = "user_redeem_stats"
+	// RedeemStatsInverseTable is the table name for the UserRedeemStat entity.
+	// It exists in this package in order to avoid circular dependency with the "userredeemstat" package.
+	RedeemStatsInverseTable = "user_redeem_stats"
+	// RedeemStatsColumn is the table column denoting the redeem_stats relation/edge.
+	RedeemStatsColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -391,6 +409,34 @@ func ByPromoCodeUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByPaymentOrdersCount orders the results by payment_orders count.
+func ByPaymentOrdersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPaymentOrdersStep(), opts...)
+	}
+}
+
+// ByPaymentOrders orders the results by payment_orders terms.
+func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRedeemStatsCount orders the results by redeem_stats count.
+func ByRedeemStatsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRedeemStatsStep(), opts...)
+	}
+}
+
+// ByRedeemStats orders the results by redeem_stats terms.
+func ByRedeemStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRedeemStatsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -458,6 +504,20 @@ func newPromoCodeUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoCodeUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoCodeUsagesTable, PromoCodeUsagesColumn),
+	)
+}
+func newPaymentOrdersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
+	)
+}
+func newRedeemStatsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RedeemStatsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RedeemStatsTable, RedeemStatsColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

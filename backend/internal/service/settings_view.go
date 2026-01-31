@@ -58,6 +58,10 @@ type SystemSettings struct {
 	OpsRealtimeMonitoringEnabled bool
 	OpsQueryModeDefault          string
 	OpsMetricsIntervalSeconds    int
+
+	// Payment settings
+	PaymentQRCode          string  `json:"payment_qr_code"`          // 支付二维码图片 (base64)
+	PaymentRateCoefficient float64 `json:"payment_rate_coefficient"` // 充值系数 (如 0.5 表示 $1 = ¥0.5)
 }
 
 type PublicSettings struct {

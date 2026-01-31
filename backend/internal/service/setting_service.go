@@ -261,6 +261,14 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 		updates[SettingKeyOpsMetricsIntervalSeconds] = strconv.Itoa(settings.OpsMetricsIntervalSeconds)
 	}
 
+	// Payment settings
+	updates[SettingKeyPaymentQRCode] = settings.PaymentQRCode
+	if settings.PaymentRateCoefficient > 0 {
+		updates[SettingKeyPaymentRateCoefficient] = strconv.FormatFloat(settings.PaymentRateCoefficient, 'f', 4, 64)
+	} else {
+		updates[SettingKeyPaymentRateCoefficient] = "1.0" // 默认系数 1.0
+	}
+
 	err := s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil && s.onUpdate != nil {
 		s.onUpdate() // Invalidate cache after settings update
@@ -398,6 +406,10 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyOpsRealtimeMonitoringEnabled: "true",
 		SettingKeyOpsQueryModeDefault:          "auto",
 		SettingKeyOpsMetricsIntervalSeconds:    "60",
+
+		// Payment settings defaults
+		SettingKeyPaymentQRCode:          "",
+		SettingKeyPaymentRateCoefficient: "1.0",
 	}
 
 	return s.settingRepo.SetMultiple(ctx, defaults)
@@ -519,6 +531,18 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 			}
 			result.OpsMetricsIntervalSeconds = v
 		}
+	}
+
+	// Payment settings
+	result.PaymentQRCode = settings[SettingKeyPaymentQRCode]
+	if raw := strings.TrimSpace(settings[SettingKeyPaymentRateCoefficient]); raw != "" {
+		if v, err := strconv.ParseFloat(raw, 64); err == nil && v > 0 {
+			result.PaymentRateCoefficient = v
+		} else {
+			result.PaymentRateCoefficient = 1.0 // 默认系数 1.0
+		}
+	} else {
+		result.PaymentRateCoefficient = 1.0 // 默认系数 1.0
 	}
 
 	return result
@@ -848,4 +872,26 @@ func (s *SettingService) SetStreamTimeoutSettings(ctx context.Context, settings 
 	}
 
 	return s.settingRepo.Set(ctx, SettingKeyStreamTimeoutSettings, string(data))
+}
+
+// GetPaymentQRCode 获取支付二维码（Base64 编码）
+func (s *SettingService) GetPaymentQRCode(ctx context.Context) string {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyPaymentQRCode)
+	if err != nil {
+		return ""
+	}
+	return value
+}
+
+// GetPaymentRateCoefficient 获取充值系数
+// 返回 USD 到 CNY 的转换系数，如 0.5 表示 $1 = ¥0.5
+func (s *SettingService) GetPaymentRateCoefficient(ctx context.Context) float64 {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyPaymentRateCoefficient)
+	if err != nil {
+		return 1.0 // 默认系数 1.0
+	}
+	if v, err := strconv.ParseFloat(value, 64); err == nil && v > 0 {
+		return v
+	}
+	return 1.0
 }

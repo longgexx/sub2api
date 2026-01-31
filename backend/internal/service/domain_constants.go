@@ -161,6 +161,17 @@ const (
 
 	// SettingKeyStreamTimeoutSettings stores JSON config for stream timeout handling.
 	SettingKeyStreamTimeoutSettings = "stream_timeout_settings"
+
+	// =========================
+	// Payment Settings
+	// =========================
+
+	// SettingKeyPaymentQRCode stores the payment QR code image (base64 encoded).
+	SettingKeyPaymentQRCode = "payment_qr_code"
+
+	// SettingKeyPaymentRateCoefficient stores the USD to CNY conversion coefficient.
+	// Example: 0.5 means $1 = ¥0.5
+	SettingKeyPaymentRateCoefficient = "payment_rate_coefficient"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

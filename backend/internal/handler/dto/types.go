@@ -192,14 +192,15 @@ type ProxyAccountSummary struct {
 }
 
 type RedeemCode struct {
-	ID        int64      `json:"id"`
-	Code      string     `json:"code"`
-	Type      string     `json:"type"`
-	Value     float64    `json:"value"`
-	Status    string     `json:"status"`
-	UsedBy    *int64     `json:"used_by"`
-	UsedAt    *time.Time `json:"used_at"`
-	CreatedAt time.Time  `json:"created_at"`
+	ID          int64      `json:"id"`
+	Code        string     `json:"code"`
+	Type        string     `json:"type"`
+	Value       float64    `json:"value"`
+	ActualValue *float64   `json:"actual_value,omitempty"`
+	Status      string     `json:"status"`
+	UsedBy      *int64     `json:"used_by"`
+	UsedAt      *time.Time `json:"used_at"`
+	CreatedAt   time.Time  `json:"created_at"`
 
 	GroupID      *int64 `json:"group_id"`
 	ValidityDays int    `json:"validity_days"`
@@ -214,6 +215,25 @@ type AdminRedeemCode struct {
 	RedeemCode
 
 	Notes string `json:"notes"`
+}
+
+// RedeemResult 是兑换结果 DTO，包含降级信息
+type RedeemResult struct {
+	RedeemCode    RedeemCode `json:"redeem_code"`
+	OriginalValue float64    `json:"original_value"`
+	ActualValue   float64    `json:"actual_value"`
+	IsDegraded    bool       `json:"is_degraded"`
+	Message       string     `json:"message,omitempty"`
+}
+
+// RedeemPreview 是兑换预检结果 DTO
+type RedeemPreview struct {
+	RedeemCode     RedeemCode `json:"redeem_code"`
+	OriginalValue  float64    `json:"original_value"`
+	ActualValue    float64    `json:"actual_value"`
+	WillDegrade    bool       `json:"will_degrade"`
+	NeedsConfirm   bool       `json:"needs_confirm"`
+	ConfirmMessage string     `json:"confirm_message,omitempty"`
 }
 
 // UsageLog 是普通用户接口使用的 usage log DTO（不包含管理员字段）。

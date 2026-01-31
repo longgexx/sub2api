@@ -44,6 +44,9 @@ func RegisterAdminRoutes(
 		// 卡密管理
 		registerRedeemCodeRoutes(admin, h)
 
+		// 兑换规则管理
+		registerRedeemRuleRoutes(admin, h)
+
 		// 优惠码管理
 		registerPromoCodeRoutes(admin, h)
 
@@ -64,6 +67,9 @@ func RegisterAdminRoutes(
 
 		// 用户属性管理
 		registerUserAttributeRoutes(admin, h)
+
+		// 支付订单管理
+		registerPaymentRoutes(admin, h)
 	}
 }
 
@@ -288,6 +294,17 @@ func registerRedeemCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	}
 }
 
+func registerRedeemRuleRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	rules := admin.Group("/redeem-rules")
+	{
+		rules.GET("", h.Admin.RedeemRule.List)
+		rules.GET("/:id", h.Admin.RedeemRule.GetByID)
+		rules.POST("", h.Admin.RedeemRule.Create)
+		rules.PUT("/:id", h.Admin.RedeemRule.Update)
+		rules.DELETE("/:id", h.Admin.RedeemRule.Delete)
+	}
+}
+
 func registerPromoCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	promoCodes := admin.Group("/promo-codes")
 	{
@@ -369,5 +386,23 @@ func registerUserAttributeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		attrs.PUT("/reorder", h.Admin.UserAttribute.ReorderDefinitions)
 		attrs.PUT("/:id", h.Admin.UserAttribute.UpdateDefinition)
 		attrs.DELETE("/:id", h.Admin.UserAttribute.DeleteDefinition)
+	}
+}
+
+func registerPaymentRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	payment := admin.Group("/payment")
+	{
+		// 订单管理
+		payment.GET("/orders", h.Admin.Payment.ListOrders)
+		payment.GET("/orders/:id", h.Admin.Payment.GetOrder)
+		payment.POST("/orders/:id/confirm", h.Admin.Payment.ManualConfirm)
+
+		// 统计
+		payment.GET("/stats", h.Admin.Payment.GetStats)
+
+		// 监控服务控制
+		payment.GET("/monitor/status", h.Admin.Payment.GetMonitorStatus)
+		payment.POST("/monitor/start", h.Admin.Payment.StartMonitor)
+		payment.POST("/monitor/stop", h.Admin.Payment.StopMonitor)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -28,6 +29,10 @@ const (
 	redeemLockDuration      = 10 * time.Second // 锁超时时间，防止死锁
 )
 
+func roundCurrency2(v float64) float64 {
+	return math.Round(v*100) / 100
+}
+
 // RedeemCache defines cache operations for redeem service
 type RedeemCache interface {
 	GetRedeemAttemptCount(ctx context.Context, userID int64) (int, error)
@@ -44,7 +49,7 @@ type RedeemCodeRepository interface {
 	GetByCode(ctx context.Context, code string) (*RedeemCode, error)
 	Update(ctx context.Context, code *RedeemCode) error
 	Delete(ctx context.Context, id int64) error
-	Use(ctx context.Context, id, userID int64) error
+	Use(ctx context.Context, id, userID int64, actualValue float64) error
 
 	List(ctx context.Context, params pagination.PaginationParams) ([]RedeemCode, *pagination.PaginationResult, error)
 	ListWithFilters(ctx context.Context, params pagination.PaginationParams, codeType, status, search string) ([]RedeemCode, *pagination.PaginationResult, error)
@@ -66,6 +71,17 @@ type RedeemCodeResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// RedeemRuleRepository 兑换规则仓储接口
+type RedeemRuleRepository interface {
+	GetByTypeAndValue(ctx context.Context, redeemType string, triggerValue float64) (*RedeemRule, error)
+}
+
+// UserRedeemStatRepository 用户兑换统计仓储接口
+type UserRedeemStatRepository interface {
+	GetUserStat(ctx context.Context, userID int64, redeemType string, value float64) (*UserRedeemStat, error)
+	IncrementCount(ctx context.Context, userID int64, redeemType string, value float64) error
+}
+
 // RedeemService 兑换码服务
 type RedeemService struct {
 	redeemRepo           RedeemCodeRepository
@@ -75,6 +91,8 @@ type RedeemService struct {
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	ruleRepo             RedeemRuleRepository
+	statRepo             UserRedeemStatRepository
 }
 
 // NewRedeemService 创建兑换码服务实例
@@ -86,6 +104,8 @@ func NewRedeemService(
 	billingCacheService *BillingCacheService,
 	entClient *dbent.Client,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	ruleRepo RedeemRuleRepository,
+	statRepo UserRedeemStatRepository,
 ) *RedeemService {
 	return &RedeemService{
 		redeemRepo:           redeemRepo,
@@ -95,6 +115,8 @@ func NewRedeemService(
 		billingCacheService:  billingCacheService,
 		entClient:            entClient,
 		authCacheInvalidator: authCacheInvalidator,
+		ruleRepo:             ruleRepo,
+		statRepo:             statRepo,
 	}
 }
 
@@ -214,8 +236,74 @@ func (s *RedeemService) releaseRedeemLock(ctx context.Context, code string) {
 	_ = s.cache.ReleaseRedeemLock(ctx, code)
 }
 
+// PreviewRedeem 预检兑换码，返回是否需要用户确认
+func (s *RedeemService) PreviewRedeem(ctx context.Context, userID int64, code string) (*RedeemPreview, error) {
+	code = strings.ToUpper(strings.TrimSpace(code))
+
+	// 检查限流
+	if err := s.checkRedeemRateLimit(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	// 查找兑换码
+	redeemCode, err := s.redeemRepo.GetByCode(ctx, code)
+	if err != nil {
+		if errors.Is(err, ErrRedeemCodeNotFound) {
+			s.incrementRedeemErrorCount(ctx, userID)
+			return nil, ErrRedeemCodeNotFound
+		}
+		return nil, fmt.Errorf("get redeem code: %w", err)
+	}
+
+	// 检查兑换码状态
+	if !redeemCode.CanUse() {
+		s.incrementRedeemErrorCount(ctx, userID)
+		return nil, ErrRedeemCodeUsed
+	}
+
+	// 验证兑换码类型的前置条件
+	if redeemCode.Type == RedeemTypeSubscription && redeemCode.GroupID == nil {
+		return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
+	}
+
+	// 初始化预检结果
+	preview := &RedeemPreview{
+		RedeemCode:    redeemCode,
+		OriginalValue: redeemCode.Value,
+		ActualValue:   redeemCode.Value,
+		WillDegrade:   false,
+		NeedsConfirm:  false,
+	}
+
+	// 只有余额类型的兑换码需要检查降级规则
+	if redeemCode.Type == RedeemTypeBalance && s.ruleRepo != nil && s.statRepo != nil {
+		triggerValue := roundCurrency2(redeemCode.Value)
+		rule, _ := s.ruleRepo.GetByTypeAndValue(ctx, RedeemTypeBalance, triggerValue)
+		if rule != nil && rule.IsActive {
+			// 查询用户该金额使用次数
+			stat, _ := s.statRepo.GetUserStat(ctx, userID, RedeemTypeBalance, triggerValue)
+			if stat != nil && stat.UsedCount >= rule.MaxTimesPerUser {
+				// 会触发降级
+				if rule.FallbackValue > 0 {
+					preview.ActualValue = rule.FallbackValue
+					preview.WillDegrade = true
+					preview.NeedsConfirm = true
+					preview.ConfirmMessage = fmt.Sprintf(
+						"您已享受过新用户试用优惠，本次兑换将按降级金额 $%.2f 到账（原价 $%.2f）。是否继续？",
+						rule.FallbackValue, redeemCode.Value,
+					)
+				}
+			}
+		}
+	}
+
+	return preview, nil
+}
+
 // Redeem 使用兑换码
-func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (*RedeemCode, error) {
+func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (*RedeemResult, error) {
+	code = strings.ToUpper(strings.TrimSpace(code))
+
 	// 检查限流
 	if err := s.checkRedeemRateLimit(ctx, userID); err != nil {
 		return nil, err
@@ -265,21 +353,66 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	// 将事务放入 context，使 repository 方法能够使用同一事务
 	txCtx := dbent.NewTxContext(ctx, tx)
 
-	// 【关键】先标记兑换码为已使用，确保并发安全
+	// 预先计算实际到账金额（用于存储到数据库）
+	actualValue := redeemCode.Value
+	isDegraded := false
+
+	// 只有余额类型需要检查降级规则
+	if redeemCode.Type == RedeemTypeBalance && s.ruleRepo != nil && s.statRepo != nil {
+		triggerValue := roundCurrency2(redeemCode.Value)
+		rule, _ := s.ruleRepo.GetByTypeAndValue(txCtx, RedeemTypeBalance, triggerValue)
+		if rule != nil && rule.IsActive {
+			stat, _ := s.statRepo.GetUserStat(txCtx, userID, RedeemTypeBalance, triggerValue)
+			if stat != nil && stat.UsedCount >= rule.MaxTimesPerUser {
+				if rule.FallbackValue > 0 {
+					actualValue = rule.FallbackValue
+					isDegraded = true
+				}
+			}
+		}
+	}
+
+	// 【关键】标记兑换码为已使用，同时记录实际到账金额
 	// 利用数据库乐观锁（WHERE status = 'unused'）保证原子性
-	if err := s.redeemRepo.Use(txCtx, redeemCode.ID, userID); err != nil {
+	if err := s.redeemRepo.Use(txCtx, redeemCode.ID, userID, actualValue); err != nil {
 		if errors.Is(err, ErrRedeemCodeNotFound) || errors.Is(err, ErrRedeemCodeUsed) {
 			return nil, ErrRedeemCodeUsed
 		}
 		return nil, fmt.Errorf("mark code as used: %w", err)
 	}
 
+	// 初始化兑换结果
+	result := &RedeemResult{
+		RedeemCode:    redeemCode,
+		OriginalValue: redeemCode.Value,
+		ActualValue:   actualValue,
+		IsDegraded:    isDegraded,
+		Message:       "",
+	}
+
 	// 执行兑换逻辑（兑换码已被锁定，此时可安全操作）
 	switch redeemCode.Type {
-	case RedeemTypeBalance:
-		// 增加用户余额
-		if err := s.userRepo.UpdateBalance(txCtx, userID, redeemCode.Value); err != nil {
+		case RedeemTypeBalance:
+			// 检查是否命中试用规则并更新统计
+			if s.ruleRepo != nil && s.statRepo != nil {
+				triggerValue := roundCurrency2(redeemCode.Value)
+				rule, _ := s.ruleRepo.GetByTypeAndValue(txCtx, RedeemTypeBalance, triggerValue)
+				if rule != nil && rule.IsActive {
+					// 更新用户统计（在事务中）
+					if err := s.statRepo.IncrementCount(txCtx, userID, RedeemTypeBalance, triggerValue); err != nil {
+						return nil, fmt.Errorf("increment redeem stat: %w", err)
+					}
+				}
+			}
+
+		// 增加用户余额（使用实际金额）
+		if err := s.userRepo.UpdateBalance(txCtx, userID, actualValue); err != nil {
 			return nil, fmt.Errorf("update user balance: %w", err)
+		}
+
+		// 设置降级消息
+		if isDegraded {
+			result.Message = fmt.Sprintf("您已享受过新用户试用优惠，本次实际到账 $%.2f", actualValue)
 		}
 
 	case RedeemTypeConcurrency:
@@ -321,8 +454,9 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	if err != nil {
 		return nil, fmt.Errorf("get updated redeem code: %w", err)
 	}
+	result.RedeemCode = redeemCode
 
-	return redeemCode, nil
+	return result, nil
 }
 
 // invalidateRedeemCaches 失效兑换相关的缓存

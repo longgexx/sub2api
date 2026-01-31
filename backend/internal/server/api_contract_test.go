@@ -493,7 +493,9 @@ func TestAPIContracts(t *testing.T) {
 					"home_content": "",
 					"hide_ccs_import_button": false,
 					"purchase_subscription_enabled": false,
-					"purchase_subscription_url": ""
+					"purchase_subscription_url": "",
+					"payment_qr_code": "",
+					"payment_rate_coefficient": 1
 				}
 			}`,
 		},
@@ -595,7 +597,7 @@ func newContractDeps(t *testing.T) *contractDeps {
 	subscriptionService := service.NewSubscriptionService(groupRepo, userSubRepo, nil)
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService)
 
-	redeemService := service.NewRedeemService(redeemRepo, userRepo, subscriptionService, nil, nil, nil, nil)
+	redeemService := service.NewRedeemService(redeemRepo, userRepo, subscriptionService, nil, nil, nil, nil, nil, nil)
 	redeemHandler := handler.NewRedeemHandler(redeemService)
 
 	settingRepo := newStubSettingRepo()
@@ -1120,7 +1122,7 @@ func (stubRedeemCodeRepo) Delete(ctx context.Context, id int64) error {
 	return errors.New("not implemented")
 }
 
-func (stubRedeemCodeRepo) Use(ctx context.Context, id, userID int64) error {
+func (stubRedeemCodeRepo) Use(ctx context.Context, id, userID int64, actualValue float64) error {
 	return errors.New("not implemented")
 }
 

@@ -88,6 +88,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
+		PaymentQRCode:                        settings.PaymentQRCode,
+		PaymentRateCoefficient:               settings.PaymentRateCoefficient,
 	})
 }
 
@@ -152,6 +154,10 @@ type UpdateSettingsRequest struct {
 	OpsRealtimeMonitoringEnabled *bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          *string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
+
+	// Payment settings
+	PaymentQRCode          string  `json:"payment_qr_code"`
+	PaymentRateCoefficient float64 `json:"payment_rate_coefficient"`
 }
 
 // UpdateSettings 更新系统设置
@@ -349,6 +355,13 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
 		}(),
+		PaymentQRCode: req.PaymentQRCode,
+		PaymentRateCoefficient: func() float64 {
+			if req.PaymentRateCoefficient > 0 {
+				return req.PaymentRateCoefficient
+			}
+			return previousSettings.PaymentRateCoefficient
+		}(),
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -409,6 +422,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
+		PaymentQRCode:                        updatedSettings.PaymentQRCode,
+		PaymentRateCoefficient:               updatedSettings.PaymentRateCoefficient,
 	})
 }
 
@@ -550,6 +565,12 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.OpsMetricsIntervalSeconds != after.OpsMetricsIntervalSeconds {
 		changed = append(changed, "ops_metrics_interval_seconds")
+	}
+	if before.PaymentQRCode != after.PaymentQRCode {
+		changed = append(changed, "payment_qr_code")
+	}
+	if before.PaymentRateCoefficient != after.PaymentRateCoefficient {
+		changed = append(changed, "payment_rate_coefficient")
 	}
 	return changed
 }

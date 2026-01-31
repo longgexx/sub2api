@@ -9,10 +9,12 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/redeemrule"
 	"github.com/Wei-Shaw/sub2api/ent/schema"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
@@ -21,6 +23,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userredeemstat"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -295,6 +298,60 @@ func init() {
 	groupDescModelRoutingEnabled := groupFields[17].Descriptor()
 	// group.DefaultModelRoutingEnabled holds the default value on creation for the model_routing_enabled field.
 	group.DefaultModelRoutingEnabled = groupDescModelRoutingEnabled.Default.(bool)
+	paymentorderFields := schema.PaymentOrder{}.Fields()
+	_ = paymentorderFields
+	// paymentorderDescTradeNo is the schema descriptor for trade_no field.
+	paymentorderDescTradeNo := paymentorderFields[0].Descriptor()
+	// paymentorder.TradeNoValidator is a validator for the "trade_no" field. It is called by the builders before save.
+	paymentorder.TradeNoValidator = func() func(string) error {
+		validators := paymentorderDescTradeNo.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(trade_no string) error {
+			for _, fn := range fns {
+				if err := fn(trade_no); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// paymentorderDescUserID is the schema descriptor for user_id field.
+	paymentorderDescUserID := paymentorderFields[1].Descriptor()
+	// paymentorder.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	paymentorder.UserIDValidator = paymentorderDescUserID.Validators[0].(func(int64) error)
+	// paymentorderDescAmount is the schema descriptor for amount field.
+	paymentorderDescAmount := paymentorderFields[2].Descriptor()
+	// paymentorder.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
+	paymentorder.AmountValidator = paymentorderDescAmount.Validators[0].(func(float64) error)
+	// paymentorderDescPaymentAmount is the schema descriptor for payment_amount field.
+	paymentorderDescPaymentAmount := paymentorderFields[3].Descriptor()
+	// paymentorder.PaymentAmountValidator is a validator for the "payment_amount" field. It is called by the builders before save.
+	paymentorder.PaymentAmountValidator = paymentorderDescPaymentAmount.Validators[0].(func(float64) error)
+	// paymentorderDescStatus is the schema descriptor for status field.
+	paymentorderDescStatus := paymentorderFields[4].Descriptor()
+	// paymentorder.DefaultStatus holds the default value on creation for the status field.
+	paymentorder.DefaultStatus = paymentorderDescStatus.Default.(string)
+	// paymentorder.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	paymentorder.StatusValidator = paymentorderDescStatus.Validators[0].(func(string) error)
+	// paymentorderDescCreatedAt is the schema descriptor for created_at field.
+	paymentorderDescCreatedAt := paymentorderFields[5].Descriptor()
+	// paymentorder.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentorder.DefaultCreatedAt = paymentorderDescCreatedAt.Default.(func() time.Time)
+	// paymentorderDescAlipayTradeNo is the schema descriptor for alipay_trade_no field.
+	paymentorderDescAlipayTradeNo := paymentorderFields[8].Descriptor()
+	// paymentorder.AlipayTradeNoValidator is a validator for the "alipay_trade_no" field. It is called by the builders before save.
+	paymentorder.AlipayTradeNoValidator = paymentorderDescAlipayTradeNo.Validators[0].(func(string) error)
+	// paymentorderDescAlipayTransLogID is the schema descriptor for alipay_trans_log_id field.
+	paymentorderDescAlipayTransLogID := paymentorderFields[9].Descriptor()
+	// paymentorder.AlipayTransLogIDValidator is a validator for the "alipay_trans_log_id" field. It is called by the builders before save.
+	paymentorder.AlipayTransLogIDValidator = paymentorderDescAlipayTransLogID.Validators[0].(func(string) error)
+	// paymentorderDescPayerAccount is the schema descriptor for payer_account field.
+	paymentorderDescPayerAccount := paymentorderFields[10].Descriptor()
+	// paymentorder.PayerAccountValidator is a validator for the "payer_account" field. It is called by the builders before save.
+	paymentorder.PayerAccountValidator = paymentorderDescPayerAccount.Validators[0].(func(string) error)
 	promocodeFields := schema.PromoCode{}.Fields()
 	_ = promocodeFields
 	// promocodeDescCode is the schema descriptor for code field.
@@ -467,19 +524,45 @@ func init() {
 	// redeemcode.DefaultValue holds the default value on creation for the value field.
 	redeemcode.DefaultValue = redeemcodeDescValue.Default.(float64)
 	// redeemcodeDescStatus is the schema descriptor for status field.
-	redeemcodeDescStatus := redeemcodeFields[3].Descriptor()
+	redeemcodeDescStatus := redeemcodeFields[4].Descriptor()
 	// redeemcode.DefaultStatus holds the default value on creation for the status field.
 	redeemcode.DefaultStatus = redeemcodeDescStatus.Default.(string)
 	// redeemcode.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	redeemcode.StatusValidator = redeemcodeDescStatus.Validators[0].(func(string) error)
 	// redeemcodeDescCreatedAt is the schema descriptor for created_at field.
-	redeemcodeDescCreatedAt := redeemcodeFields[7].Descriptor()
+	redeemcodeDescCreatedAt := redeemcodeFields[8].Descriptor()
 	// redeemcode.DefaultCreatedAt holds the default value on creation for the created_at field.
 	redeemcode.DefaultCreatedAt = redeemcodeDescCreatedAt.Default.(func() time.Time)
 	// redeemcodeDescValidityDays is the schema descriptor for validity_days field.
-	redeemcodeDescValidityDays := redeemcodeFields[9].Descriptor()
+	redeemcodeDescValidityDays := redeemcodeFields[10].Descriptor()
 	// redeemcode.DefaultValidityDays holds the default value on creation for the validity_days field.
 	redeemcode.DefaultValidityDays = redeemcodeDescValidityDays.Default.(int)
+	redeemruleFields := schema.RedeemRule{}.Fields()
+	_ = redeemruleFields
+	// redeemruleDescType is the schema descriptor for type field.
+	redeemruleDescType := redeemruleFields[0].Descriptor()
+	// redeemrule.DefaultType holds the default value on creation for the type field.
+	redeemrule.DefaultType = redeemruleDescType.Default.(string)
+	// redeemrule.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	redeemrule.TypeValidator = redeemruleDescType.Validators[0].(func(string) error)
+	// redeemruleDescMaxTimesPerUser is the schema descriptor for max_times_per_user field.
+	redeemruleDescMaxTimesPerUser := redeemruleFields[2].Descriptor()
+	// redeemrule.DefaultMaxTimesPerUser holds the default value on creation for the max_times_per_user field.
+	redeemrule.DefaultMaxTimesPerUser = redeemruleDescMaxTimesPerUser.Default.(int)
+	// redeemruleDescIsActive is the schema descriptor for is_active field.
+	redeemruleDescIsActive := redeemruleFields[4].Descriptor()
+	// redeemrule.DefaultIsActive holds the default value on creation for the is_active field.
+	redeemrule.DefaultIsActive = redeemruleDescIsActive.Default.(bool)
+	// redeemruleDescCreatedAt is the schema descriptor for created_at field.
+	redeemruleDescCreatedAt := redeemruleFields[6].Descriptor()
+	// redeemrule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	redeemrule.DefaultCreatedAt = redeemruleDescCreatedAt.Default.(func() time.Time)
+	// redeemruleDescUpdatedAt is the schema descriptor for updated_at field.
+	redeemruleDescUpdatedAt := redeemruleFields[7].Descriptor()
+	// redeemrule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	redeemrule.DefaultUpdatedAt = redeemruleDescUpdatedAt.Default.(func() time.Time)
+	// redeemrule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	redeemrule.UpdateDefaultUpdatedAt = redeemruleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	settingFields := schema.Setting{}.Fields()
 	_ = settingFields
 	// settingDescKey is the schema descriptor for key field.
@@ -878,6 +961,28 @@ func init() {
 	userattributevalueDescValue := userattributevalueFields[2].Descriptor()
 	// userattributevalue.DefaultValue holds the default value on creation for the value field.
 	userattributevalue.DefaultValue = userattributevalueDescValue.Default.(string)
+	userredeemstatFields := schema.UserRedeemStat{}.Fields()
+	_ = userredeemstatFields
+	// userredeemstatDescRedeemType is the schema descriptor for redeem_type field.
+	userredeemstatDescRedeemType := userredeemstatFields[1].Descriptor()
+	// userredeemstat.DefaultRedeemType holds the default value on creation for the redeem_type field.
+	userredeemstat.DefaultRedeemType = userredeemstatDescRedeemType.Default.(string)
+	// userredeemstat.RedeemTypeValidator is a validator for the "redeem_type" field. It is called by the builders before save.
+	userredeemstat.RedeemTypeValidator = userredeemstatDescRedeemType.Validators[0].(func(string) error)
+	// userredeemstatDescUsedCount is the schema descriptor for used_count field.
+	userredeemstatDescUsedCount := userredeemstatFields[3].Descriptor()
+	// userredeemstat.DefaultUsedCount holds the default value on creation for the used_count field.
+	userredeemstat.DefaultUsedCount = userredeemstatDescUsedCount.Default.(int)
+	// userredeemstatDescCreatedAt is the schema descriptor for created_at field.
+	userredeemstatDescCreatedAt := userredeemstatFields[5].Descriptor()
+	// userredeemstat.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userredeemstat.DefaultCreatedAt = userredeemstatDescCreatedAt.Default.(func() time.Time)
+	// userredeemstatDescUpdatedAt is the schema descriptor for updated_at field.
+	userredeemstatDescUpdatedAt := userredeemstatFields[6].Descriptor()
+	// userredeemstat.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userredeemstat.DefaultUpdatedAt = userredeemstatDescUpdatedAt.Default.(func() time.Time)
+	// userredeemstat.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userredeemstat.UpdateDefaultUpdatedAt = userredeemstatDescUpdatedAt.UpdateDefault.(func() time.Time)
 	usersubscriptionMixin := schema.UserSubscription{}.Mixin()
 	usersubscriptionMixinHooks1 := usersubscriptionMixin[1].Hooks()
 	usersubscription.Hooks[0] = usersubscriptionMixinHooks1[0]

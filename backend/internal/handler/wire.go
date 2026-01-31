@@ -19,6 +19,7 @@ func ProvideAdminHandlers(
 	antigravityOAuthHandler *admin.AntigravityOAuthHandler,
 	proxyHandler *admin.ProxyHandler,
 	redeemHandler *admin.RedeemHandler,
+	redeemRuleHandler *admin.RedeemRuleHandler,
 	promoHandler *admin.PromoHandler,
 	settingHandler *admin.SettingHandler,
 	opsHandler *admin.OpsHandler,
@@ -26,6 +27,7 @@ func ProvideAdminHandlers(
 	subscriptionHandler *admin.SubscriptionHandler,
 	usageHandler *admin.UsageHandler,
 	userAttributeHandler *admin.UserAttributeHandler,
+	paymentHandler *admin.PaymentHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:        dashboardHandler,
@@ -38,6 +40,7 @@ func ProvideAdminHandlers(
 		AntigravityOAuth: antigravityOAuthHandler,
 		Proxy:            proxyHandler,
 		Redeem:           redeemHandler,
+		RedeemRule:       redeemRuleHandler,
 		Promo:            promoHandler,
 		Setting:          settingHandler,
 		Ops:              opsHandler,
@@ -45,6 +48,7 @@ func ProvideAdminHandlers(
 		Subscription:     subscriptionHandler,
 		Usage:            usageHandler,
 		UserAttribute:    userAttributeHandler,
+		Payment:          paymentHandler,
 	}
 }
 
@@ -71,6 +75,7 @@ func ProvideHandlers(
 	openaiGatewayHandler *OpenAIGatewayHandler,
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
+	paymentHandler *PaymentHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -84,6 +89,7 @@ func ProvideHandlers(
 		OpenAIGateway: openaiGatewayHandler,
 		Setting:       settingHandler,
 		Totp:          totpHandler,
+		Payment:       paymentHandler,
 	}
 }
 
@@ -99,6 +105,7 @@ var ProviderSet = wire.NewSet(
 	NewGatewayHandler,
 	NewOpenAIGatewayHandler,
 	NewTotpHandler,
+	NewPaymentHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
@@ -112,6 +119,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewAntigravityOAuthHandler,
 	admin.NewProxyHandler,
 	admin.NewRedeemHandler,
+	admin.NewRedeemRuleHandler,
 	admin.NewPromoHandler,
 	admin.NewSettingHandler,
 	admin.NewOpsHandler,
@@ -119,6 +127,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewSubscriptionHandler,
 	admin.NewUsageHandler,
 	admin.NewUserAttributeHandler,
+	admin.NewPaymentHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

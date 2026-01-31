@@ -980,6 +980,94 @@
           </div>
         </div>
 
+        <!-- Payment Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.payment.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.payment.description') }}
+            </p>
+          </div>
+          <div class="space-y-6 p-6">
+            <!-- QR Code Upload -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.payment.qrCode') }}
+              </label>
+              <div class="flex items-start gap-6">
+                <!-- QR Code Preview -->
+                <div class="flex-shrink-0">
+                  <div
+                    class="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-dark-600 dark:bg-dark-800"
+                    :class="{ 'border-solid': form.payment_qr_code }"
+                  >
+                    <img
+                      v-if="form.payment_qr_code"
+                      :src="form.payment_qr_code"
+                      alt="Payment QR Code"
+                      class="h-full w-full object-contain"
+                    />
+                    <Icon
+                      v-else
+                      name="creditCard"
+                      size="xl"
+                      class="text-gray-400 dark:text-dark-500"
+                    />
+                  </div>
+                </div>
+                <!-- Upload Controls -->
+                <div class="flex-1 space-y-3">
+                  <div class="flex items-center gap-3">
+                    <label class="btn btn-secondary btn-sm cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="handleQRCodeUpload"
+                      />
+                      <Icon name="upload" size="sm" class="mr-1.5" :stroke-width="2" />
+                      {{ t('admin.settings.payment.uploadQRCode') }}
+                    </label>
+                    <button
+                      v-if="form.payment_qr_code"
+                      type="button"
+                      @click="form.payment_qr_code = ''"
+                      class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                    >
+                      <Icon name="trash" size="sm" class="mr-1.5" :stroke-width="2" />
+                      {{ t('common.remove') }}
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.payment.qrCodeHint') }}
+                  </p>
+                  <p v-if="qrCodeError" class="text-xs text-red-500">{{ qrCodeError }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rate Coefficient -->
+            <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.payment.rateCoefficient') }}
+              </label>
+              <input
+                v-model.number="form.payment_rate_coefficient"
+                type="number"
+                step="0.01"
+                min="0.01"
+                max="100"
+                class="input w-32"
+              />
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.payment.rateCoefficientHint', { example: (10 * (form.payment_rate_coefficient || 1)).toFixed(2) }) }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Send Test Email - Only show when email verification is enabled -->
         <div v-if="form.email_verify_enabled" class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1162,7 +1250,10 @@ const form = reactive<SettingsForm>({
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
   ops_query_mode_default: 'auto',
-  ops_metrics_interval_seconds: 60
+  ops_metrics_interval_seconds: 60,
+  // Payment settings
+  payment_qr_code: '',
+  payment_rate_coefficient: 1.0
 })
 
 // LinuxDo OAuth redirect URL suggestion
@@ -1212,6 +1303,44 @@ function handleLogoUpload(event: Event) {
   }
   reader.onerror = () => {
     logoError.value = t('admin.settings.site.logoReadError')
+  }
+  reader.readAsDataURL(file)
+
+  // Reset input
+  input.value = ''
+}
+
+const qrCodeError = ref('')
+
+function handleQRCodeUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  qrCodeError.value = ''
+
+  if (!file) return
+
+  // Check file size (500KB)
+  const maxSize = 500 * 1024
+  if (file.size > maxSize) {
+    qrCodeError.value = t('admin.settings.payment.qrCodeSizeError')
+    input.value = ''
+    return
+  }
+
+  // Check file type
+  if (!file.type.startsWith('image/')) {
+    qrCodeError.value = t('admin.settings.payment.qrCodeTypeError')
+    input.value = ''
+    return
+  }
+
+  // Convert to base64
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.payment_qr_code = e.target?.result as string
+  }
+  reader.onerror = () => {
+    qrCodeError.value = t('admin.settings.payment.qrCodeReadError')
   }
   reader.readAsDataURL(file)
 
@@ -1277,7 +1406,10 @@ async function saveSettings() {
       fallback_model_gemini: form.fallback_model_gemini,
       fallback_model_antigravity: form.fallback_model_antigravity,
       enable_identity_patch: form.enable_identity_patch,
-      identity_patch_prompt: form.identity_patch_prompt
+      identity_patch_prompt: form.identity_patch_prompt,
+      // Payment settings
+      payment_qr_code: form.payment_qr_code,
+      payment_rate_coefficient: form.payment_rate_coefficient
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)

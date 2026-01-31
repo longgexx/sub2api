@@ -65,6 +65,10 @@ export interface SystemSettings {
   ops_realtime_monitoring_enabled: boolean
   ops_query_mode_default: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds: number
+
+  // Payment settings
+  payment_qr_code: string
+  payment_rate_coefficient: number
 }
 
 export interface UpdateSettingsRequest {
@@ -110,6 +114,9 @@ export interface UpdateSettingsRequest {
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds?: number
+  // Payment settings
+  payment_qr_code?: string
+  payment_rate_coefficient?: number
 }
 
 /**

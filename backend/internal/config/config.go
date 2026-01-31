@@ -59,6 +59,7 @@ type Config struct {
 	UsageCleanup UsageCleanupConfig         `mapstructure:"usage_cleanup"`
 	Concurrency  ConcurrencyConfig          `mapstructure:"concurrency"`
 	TokenRefresh TokenRefreshConfig         `mapstructure:"token_refresh"`
+	Payment      PaymentConfig              `mapstructure:"payment"`
 	RunMode      string                     `mapstructure:"run_mode" yaml:"run_mode"`
 	Timezone     string                     `mapstructure:"timezone"` // e.g. "Asia/Shanghai", "UTC"
 	Gemini       GeminiConfig               `mapstructure:"gemini"`
@@ -557,6 +558,46 @@ type UsageCleanupConfig struct {
 	TaskTimeoutSeconds int `mapstructure:"task_timeout_seconds"`
 }
 
+// PaymentConfig 支付充值配置
+type PaymentConfig struct {
+	// Enabled: 是否启用支付充值功能
+	Enabled bool `mapstructure:"enabled"`
+	// Alipay: 支付宝配置
+	Alipay AlipayConfig `mapstructure:"alipay"`
+	// Monitor: 支付监控配置
+	Monitor PaymentMonitorConfig `mapstructure:"monitor"`
+}
+
+// AlipayConfig 支付宝配置
+type AlipayConfig struct {
+	// ServerURL: 支付宝网关URL
+	ServerURL string `mapstructure:"server_url"`
+	// AppID: 应用ID
+	AppID string `mapstructure:"app_id"`
+	// PrivateKey: 应用私钥（RSA2）
+	PrivateKey string `mapstructure:"private_key"`
+	// AlipayPublicKey: 支付宝公钥
+	AlipayPublicKey string `mapstructure:"alipay_public_key"`
+	// SignType: 签名类型，默认RSA2
+	SignType string `mapstructure:"sign_type"`
+}
+
+// PaymentMonitorConfig 支付监控配置
+type PaymentMonitorConfig struct {
+	// Enabled: 是否启用监控服务
+	Enabled bool `mapstructure:"enabled"`
+	// IntervalSeconds: 轮询间隔（秒）
+	IntervalSeconds int `mapstructure:"interval_seconds"`
+	// OrderTimeoutMins: 订单超时时间（分钟）
+	OrderTimeoutMins int `mapstructure:"order_timeout_mins"`
+	// BusinessQRCode: 经营码二维码图片路径或URL
+	BusinessQRCode string `mapstructure:"business_qr_code"`
+	// MinAmount: 最小充值金额
+	MinAmount float64 `mapstructure:"min_amount"`
+	// MaxAmount: 最大充值金额
+	MaxAmount float64 `mapstructure:"max_amount"`
+}
+
 func NormalizeRunMode(value string) string {
 	normalized := strings.ToLower(strings.TrimSpace(value))
 	switch normalized {
@@ -889,6 +930,20 @@ func setDefaults() {
 	viper.SetDefault("token_refresh.refresh_before_expiry_hours", 0.5) // 提前30分钟刷新（适配Google 1小时token）
 	viper.SetDefault("token_refresh.max_retries", 3)                   // 最多重试3次
 	viper.SetDefault("token_refresh.retry_backoff_seconds", 2)         // 重试退避基础2秒
+
+	// Payment 支付充值配置
+	viper.SetDefault("payment.enabled", false)
+	viper.SetDefault("payment.alipay.server_url", "https://openapi.alipay.com/gateway.do")
+	viper.SetDefault("payment.alipay.app_id", "")
+	viper.SetDefault("payment.alipay.private_key", "")
+	viper.SetDefault("payment.alipay.alipay_public_key", "")
+	viper.SetDefault("payment.alipay.sign_type", "RSA2")
+	viper.SetDefault("payment.monitor.enabled", true)
+	viper.SetDefault("payment.monitor.interval_seconds", 30)
+	viper.SetDefault("payment.monitor.order_timeout_mins", 5)
+	viper.SetDefault("payment.monitor.business_qr_code", "")
+	viper.SetDefault("payment.monitor.min_amount", 1.0)
+	viper.SetDefault("payment.monitor.max_amount", 10000.0)
 
 	// Gemini OAuth - configure via environment variables or config file
 	// GEMINI_OAUTH_CLIENT_ID and GEMINI_OAUTH_CLIENT_SECRET
@@ -1226,6 +1281,15 @@ func (c *Config) Validate() error {
 	}
 	if c.Concurrency.PingInterval < 5 || c.Concurrency.PingInterval > 30 {
 		return fmt.Errorf("concurrency.ping_interval must be between 5-30 seconds")
+	}
+	// Payment monitor validation
+	if c.Payment.Enabled && c.Payment.Monitor.Enabled {
+		if c.Payment.Monitor.IntervalSeconds <= 0 {
+			return fmt.Errorf("payment.monitor.interval_seconds must be positive when payment monitoring is enabled")
+		}
+		if c.Payment.Monitor.OrderTimeoutMins <= 0 {
+			return fmt.Errorf("payment.monitor.order_timeout_mins must be positive when payment monitoring is enabled")
+		}
 	}
 	return nil
 }
