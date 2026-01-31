@@ -126,7 +126,7 @@ func (r *paymentOrderRepository) GetPendingByAmountAfterTime(ctx context.Context
 			paymentorder.PaymentAmountGTE(amount-epsilon),
 			paymentorder.PaymentAmountLTE(amount+epsilon),
 			paymentorder.CreatedAtGTE(threshold),
-			paymentorder.CreatedAtLTE(billTime),   // 订单创建时间必须早于账单时间
+			paymentorder.CreatedAtLTE(billTime),  // 订单创建时间必须早于账单时间
 			paymentorder.ExpiredAtGT(time.Now()), // 未过期
 		).
 		Order(dbent.Asc(paymentorder.FieldCreatedAt)).

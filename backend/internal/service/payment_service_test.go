@@ -118,7 +118,7 @@ func (s *paymentOrderRepoStub) GetStats(ctx context.Context) (*PaymentStats, err
 
 // paymentUserRepoStub 用于支付测试的用户仓储替身
 type paymentUserRepoStub struct {
-	balance        float64
+	balance          float64
 	updateBalanceErr error
 }
 

@@ -197,11 +197,11 @@ func (s *PaymentMonitorService) GetLastCheckTime() time.Time {
 }
 
 // GetStatus 获取监控状态
-func (s *PaymentMonitorService) GetStatus() map[string]interface{} {
+func (s *PaymentMonitorService) GetStatus() map[string]any {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	status := map[string]interface{}{
+	status := map[string]any{
 		"running":         s.running,
 		"last_check_time": s.lastCheckTime,
 	}

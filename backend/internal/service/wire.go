@@ -229,8 +229,12 @@ func ProvideAlipayClient(cfg *config.Config) *alipay.Client {
 	status := client.GetConfigStatus()
 	println("[Alipay] Configuration status:")
 	println("  - App ID:", status["app_id_masked"])
-	println("  - Private Key:", boolToConfigured(status["private_key_set"].(bool)))
-	println("  - Public Key:", boolToConfigured(status["public_key_set"].(bool)))
+	if privateKeySet, ok := status["private_key_set"].(bool); ok {
+		println("  - Private Key:", boolToConfigured(privateKeySet))
+	}
+	if publicKeySet, ok := status["public_key_set"].(bool); ok {
+		println("  - Public Key:", boolToConfigured(publicKeySet))
+	}
 	println("  - Server URL:", status["server_url"])
 
 	// 如果配置完整，尝试校验

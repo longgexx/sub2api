@@ -144,7 +144,7 @@ func (c *Client) Sign(content string) (string, error) {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(content))
+	_, _ = h.Write([]byte(content))
 	hashed := h.Sum(nil)
 
 	signature, err := rsa.SignPKCS1v15(rand.Reader, c.privateKey, crypto.SHA256, hashed)
@@ -167,7 +167,7 @@ func (c *Client) Verify(content, sign string) error {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(content))
+	_, _ = h.Write([]byte(content))
 	hashed := h.Sum(nil)
 
 	return rsa.VerifyPKCS1v15(c.publicKey, crypto.SHA256, hashed, signBytes)
@@ -209,7 +209,7 @@ func (c *Client) buildSignContent(params map[string]string) string {
 }
 
 // Execute 执行 API 请求
-func (c *Client) Execute(method string, bizContent map[string]interface{}) (map[string]interface{}, error) {
+func (c *Client) Execute(method string, bizContent map[string]any) (map[string]any, error) {
 	startTime := time.Now()
 	params := c.buildCommonParams(method)
 
@@ -243,7 +243,7 @@ func (c *Client) Execute(method string, bizContent map[string]interface{}) (map[
 		log.Printf("[Alipay] API %s request failed: %v (took %v)", method, err, time.Since(startTime))
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -259,7 +259,7 @@ func (c *Client) Execute(method string, bizContent map[string]interface{}) (map[
 	}
 
 	// 解析响应
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		log.Printf("[Alipay] API %s parse response failed: %v, body: %s (took %v)", method, err, string(body), time.Since(startTime))
 		return nil, fmt.Errorf("parse response failed: %w", err)
@@ -268,7 +268,7 @@ func (c *Client) Execute(method string, bizContent map[string]interface{}) (map[
 	// 记录 API 调用结果
 	duration := time.Since(startTime)
 	respKey := strings.ReplaceAll(method, ".", "_") + "_response"
-	if respData, ok := result[respKey].(map[string]interface{}); ok {
+	if respData, ok := result[respKey].(map[string]any); ok {
 		code, _ := respData["code"].(string)
 		msg, _ := respData["msg"].(string)
 		if code == "10000" {
@@ -288,7 +288,7 @@ func (c *Client) Execute(method string, bizContent map[string]interface{}) (map[
 
 // QueryBills 查询账单
 func (c *Client) QueryBills(startTime, endTime string, pageNo, pageSize int) ([]BillRecord, error) {
-	bizContent := map[string]interface{}{
+	bizContent := map[string]any{
 		"start_time": startTime,
 		"end_time":   endTime,
 		"page_no":    fmt.Sprintf("%d", pageNo),
@@ -302,7 +302,7 @@ func (c *Client) QueryBills(startTime, endTime string, pageNo, pageSize int) ([]
 
 	// 解析响应
 	respKey := "alipay_data_bill_accountlog_query_response"
-	respData, ok := result[respKey].(map[string]interface{})
+	respData, ok := result[respKey].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid response format")
 	}
@@ -317,13 +317,13 @@ func (c *Client) QueryBills(startTime, endTime string, pageNo, pageSize int) ([]
 
 	// 解析账单记录
 	var bills []BillRecord
-	detailList, ok := respData["detail_list"].([]interface{})
+	detailList, ok := respData["detail_list"].([]any)
 	if !ok {
 		return bills, nil // 没有账单记录
 	}
 
 	for _, item := range detailList {
-		if itemMap, ok := item.(map[string]interface{}); ok {
+		if itemMap, ok := item.(map[string]any); ok {
 			bill := BillRecord{
 				TransLogID:     getString(itemMap, "account_log_id"),
 				TransType:      getString(itemMap, "type"),
@@ -401,13 +401,13 @@ func (c *Client) ValidateConfig() error {
 }
 
 // GetConfigStatus 获取配置状态摘要
-func (c *Client) GetConfigStatus() map[string]interface{} {
-	status := map[string]interface{}{
-		"configured":          c.IsConfigured(),
-		"app_id_set":          c.config.AppID != "",
-		"private_key_set":     c.privateKey != nil,
-		"public_key_set":      c.publicKey != nil,
-		"server_url":          c.config.ServerURL,
+func (c *Client) GetConfigStatus() map[string]any {
+	status := map[string]any{
+		"configured":      c.IsConfigured(),
+		"app_id_set":      c.config.AppID != "",
+		"private_key_set": c.privateKey != nil,
+		"public_key_set":  c.publicKey != nil,
+		"server_url":      c.config.ServerURL,
 	}
 	if c.config.AppID != "" {
 		// 只显示 app_id 的前4位和后4位
@@ -422,20 +422,20 @@ func (c *Client) GetConfigStatus() map[string]interface{} {
 }
 
 // 辅助函数
-func getString(m map[string]interface{}, key string) string {
+func getString(m map[string]any, key string) string {
 	if v, ok := m[key].(string); ok {
 		return v
 	}
 	return ""
 }
 
-func getFloat64(m map[string]interface{}, key string) float64 {
+func getFloat64(m map[string]any, key string) float64 {
 	switch v := m[key].(type) {
 	case float64:
 		return v
 	case string:
 		var f float64
-		fmt.Sscanf(v, "%f", &f)
+		_, _ = fmt.Sscanf(v, "%f", &f)
 		return f
 	}
 	return 0

@@ -392,18 +392,18 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 
 	// 执行兑换逻辑（兑换码已被锁定，此时可安全操作）
 	switch redeemCode.Type {
-		case RedeemTypeBalance:
-			// 检查是否命中试用规则并更新统计
-			if s.ruleRepo != nil && s.statRepo != nil {
-				triggerValue := roundCurrency2(redeemCode.Value)
-				rule, _ := s.ruleRepo.GetByTypeAndValue(txCtx, RedeemTypeBalance, triggerValue)
-				if rule != nil && rule.IsActive {
-					// 更新用户统计（在事务中）
-					if err := s.statRepo.IncrementCount(txCtx, userID, RedeemTypeBalance, triggerValue); err != nil {
-						return nil, fmt.Errorf("increment redeem stat: %w", err)
-					}
+	case RedeemTypeBalance:
+		// 检查是否命中试用规则并更新统计
+		if s.ruleRepo != nil && s.statRepo != nil {
+			triggerValue := roundCurrency2(redeemCode.Value)
+			rule, _ := s.ruleRepo.GetByTypeAndValue(txCtx, RedeemTypeBalance, triggerValue)
+			if rule != nil && rule.IsActive {
+				// 更新用户统计（在事务中）
+				if err := s.statRepo.IncrementCount(txCtx, userID, RedeemTypeBalance, triggerValue); err != nil {
+					return nil, fmt.Errorf("increment redeem stat: %w", err)
 				}
 			}
+		}
 
 		// 增加用户余额（使用实际金额）
 		if err := s.userRepo.UpdateBalance(txCtx, userID, actualValue); err != nil {

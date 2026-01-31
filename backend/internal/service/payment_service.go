@@ -16,12 +16,12 @@ import (
 )
 
 var (
-	ErrPaymentOrderNotFound = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
-	ErrPaymentOrderExpired  = infraerrors.BadRequest("PAYMENT_ORDER_EXPIRED", "payment order has expired")
-	ErrPaymentOrderPaid     = infraerrors.Conflict("PAYMENT_ORDER_PAID", "payment order already paid")
+	ErrPaymentOrderNotFound  = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
+	ErrPaymentOrderExpired   = infraerrors.BadRequest("PAYMENT_ORDER_EXPIRED", "payment order has expired")
+	ErrPaymentOrderPaid      = infraerrors.Conflict("PAYMENT_ORDER_PAID", "payment order already paid")
 	ErrPaymentOrderCancelled = infraerrors.Conflict("PAYMENT_ORDER_CANCELLED", "payment order has been cancelled")
-	ErrPaymentAmountInvalid = infraerrors.BadRequest("PAYMENT_AMOUNT_INVALID", "payment amount is invalid")
-	ErrPaymentDisabled      = infraerrors.BadRequest("PAYMENT_DISABLED", "payment is not enabled")
+	ErrPaymentAmountInvalid  = infraerrors.BadRequest("PAYMENT_AMOUNT_INVALID", "payment amount is invalid")
+	ErrPaymentDisabled       = infraerrors.BadRequest("PAYMENT_DISABLED", "payment is not enabled")
 )
 
 // PaymentOrderRepository 支付订单数据访问接口
