@@ -57,8 +57,8 @@ type PaymentService struct {
 	settingService       *SettingService
 	entClient            *dbent.Client
 	cfg                  *config.Config
-	mu                   sync.Mutex             // 用于金额分配
-	monitorTrigger       PaymentMonitorTrigger  // 监控服务触发器
+	mu                   sync.Mutex            // 用于金额分配
+	monitorTrigger       PaymentMonitorTrigger // 监控服务触发器
 }
 
 // NewPaymentService 创建支付服务

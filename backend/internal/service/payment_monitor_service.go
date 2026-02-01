@@ -18,7 +18,6 @@ import (
 type PaymentMonitorService struct {
 	alipayClient   *alipay.Client
 	paymentService *PaymentService
-	cfg            *config.Config
 	running        bool
 	mu             sync.Mutex
 	ctx            context.Context
@@ -42,7 +41,6 @@ func NewPaymentMonitorService(
 	return &PaymentMonitorService{
 		alipayClient:   alipayClient,
 		paymentService: paymentService,
-		cfg:            cfg,
 		triggerChan:    make(chan struct{}, 1), // 带缓冲，避免阻塞
 		activeInterval: activeInterval,
 	}

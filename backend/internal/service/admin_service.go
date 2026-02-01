@@ -466,7 +466,7 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 		if err != nil {
 			return nil, err
 		}
-		oldBalance = user.Balance
+		_ = user.Balance // 验证用户存在
 		// 使用原子操作增加余额
 		if err := s.userRepo.UpdateBalance(ctx, userID, balance); err != nil {
 			return nil, err
