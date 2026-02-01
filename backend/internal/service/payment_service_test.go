@@ -14,13 +14,15 @@ import (
 
 // paymentOrderRepoStub 是支付订单仓储的测试替身
 type paymentOrderRepoStub struct {
-	orders       map[int64]*PaymentOrder
-	ordersByNo   map[string]*PaymentOrder
-	usedAmounts  []float64
-	usedLogIDs   map[string]bool
-	createErr    error
-	nextID       int64
-	updateCalled bool
+	orders          map[int64]*PaymentOrder
+	ordersByNo      map[string]*PaymentOrder
+	usedAmounts     []float64
+	usedLogIDs      map[string]bool
+	createErr       error
+	nextID          int64
+	updateCalled    bool
+	pendingCount    int64
+	countPendingErr error
 }
 
 func newPaymentOrderRepoStub() *paymentOrderRepoStub {
@@ -114,6 +116,13 @@ func (s *paymentOrderRepoStub) CleanupExpiredOrders(ctx context.Context) (int64,
 
 func (s *paymentOrderRepoStub) GetStats(ctx context.Context) (*PaymentStats, error) {
 	return &PaymentStats{}, nil
+}
+
+func (s *paymentOrderRepoStub) CountPending(ctx context.Context) (int64, error) {
+	if s.countPendingErr != nil {
+		return 0, s.countPendingErr
+	}
+	return s.pendingCount, nil
 }
 
 // paymentUserRepoStub 用于支付测试的用户仓储替身
@@ -222,6 +231,17 @@ func (s *paymentUserRepoStub) LinkAnonymousUser(ctx context.Context, anonymousUs
 	panic("unexpected call")
 }
 
+// monitorTriggerStub 监控服务触发器测试替身
+type monitorTriggerStub struct {
+	triggered     bool
+	triggerCount  int
+}
+
+func (s *monitorTriggerStub) Trigger() {
+	s.triggered = true
+	s.triggerCount++
+}
+
 func TestPaymentService_GetConfig_Disabled(t *testing.T) {
 	cfg := &config.Config{
 		Payment: config.PaymentConfig{
@@ -319,6 +339,56 @@ func TestPaymentService_CreateOrder_Success(t *testing.T) {
 	require.Equal(t, PaymentStatusPending, order.Status)
 	require.NotEmpty(t, order.TradeNo)
 	require.Len(t, order.TradeNo, 20) // 14位时间戳 + 6位随机数
+}
+
+func TestPaymentService_CreateOrder_TriggerMonitor(t *testing.T) {
+	cfg := &config.Config{
+		Payment: config.PaymentConfig{
+			Enabled: true,
+			Monitor: config.PaymentMonitorConfig{
+				MinAmount:        1.0,
+				MaxAmount:        100.0,
+				OrderTimeoutMins: 30,
+			},
+		},
+	}
+
+	t.Run("创建订单后触发监控服务", func(t *testing.T) {
+		repo := newPaymentOrderRepoStub()
+		trigger := &monitorTriggerStub{}
+		svc := NewPaymentService(repo, nil, nil, nil, nil, nil, cfg)
+		svc.SetMonitorTrigger(trigger)
+
+		_, err := svc.CreateOrder(context.Background(), 123, 10.0)
+		require.NoError(t, err)
+		require.True(t, trigger.triggered)
+		require.Equal(t, 1, trigger.triggerCount)
+	})
+
+	t.Run("未设置触发器时不报错", func(t *testing.T) {
+		repo := newPaymentOrderRepoStub()
+		svc := NewPaymentService(repo, nil, nil, nil, nil, nil, cfg)
+		// 不设置 monitorTrigger
+
+		_, err := svc.CreateOrder(context.Background(), 123, 10.0)
+		require.NoError(t, err)
+	})
+
+	t.Run("多次创建订单多次触发", func(t *testing.T) {
+		repo := newPaymentOrderRepoStub()
+		trigger := &monitorTriggerStub{}
+		svc := NewPaymentService(repo, nil, nil, nil, nil, nil, cfg)
+		svc.SetMonitorTrigger(trigger)
+
+		_, err := svc.CreateOrder(context.Background(), 123, 10.0)
+		require.NoError(t, err)
+		_, err = svc.CreateOrder(context.Background(), 123, 20.0)
+		require.NoError(t, err)
+		_, err = svc.CreateOrder(context.Background(), 123, 30.0)
+		require.NoError(t, err)
+
+		require.Equal(t, 3, trigger.triggerCount)
+	})
 }
 
 func TestPaymentService_AllocateUniqueAmount(t *testing.T) {
@@ -513,5 +583,35 @@ func TestPaymentService_IsTransLogIDUsed(t *testing.T) {
 		used, err := svc.IsTransLogIDUsed(context.Background(), "new-log-id")
 		require.NoError(t, err)
 		require.False(t, used)
+	})
+}
+
+func TestPaymentService_CountPendingOrders(t *testing.T) {
+	cfg := &config.Config{
+		Payment: config.PaymentConfig{
+			Enabled: true,
+		},
+	}
+
+	t.Run("返回待支付订单数量", func(t *testing.T) {
+		repo := newPaymentOrderRepoStub()
+		repo.pendingCount = 5
+
+		svc := NewPaymentService(repo, nil, nil, nil, nil, nil, cfg)
+
+		count, err := svc.CountPendingOrders(context.Background())
+		require.NoError(t, err)
+		require.Equal(t, int64(5), count)
+	})
+
+	t.Run("无待支付订单时返回0", func(t *testing.T) {
+		repo := newPaymentOrderRepoStub()
+		repo.pendingCount = 0
+
+		svc := NewPaymentService(repo, nil, nil, nil, nil, nil, cfg)
+
+		count, err := svc.CountPendingOrders(context.Background())
+		require.NoError(t, err)
+		require.Equal(t, int64(0), count)
 	})
 }

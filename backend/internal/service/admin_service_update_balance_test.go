@@ -30,6 +30,22 @@ func (s *balanceUserRepoStub) Update(ctx context.Context, user *User) error {
 	return nil
 }
 
+func (s *balanceUserRepoStub) UpdateBalance(ctx context.Context, id int64, amount float64) error {
+	if s.userRepoStub != nil && s.userRepoStub.user != nil {
+		s.userRepoStub.user.Balance += amount
+	}
+	return nil
+}
+
+func (s *balanceUserRepoStub) SetBalance(ctx context.Context, id int64, newBalance float64) (float64, error) {
+	var oldBalance float64
+	if s.userRepoStub != nil && s.userRepoStub.user != nil {
+		oldBalance = s.userRepoStub.user.Balance
+		s.userRepoStub.user.Balance = newBalance
+	}
+	return oldBalance, nil
+}
+
 type balanceRedeemRepoStub struct {
 	*redeemRepoStub
 	created []*RedeemCode

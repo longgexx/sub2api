@@ -18,6 +18,7 @@ type PaymentOrder struct {
 	Amount           float64  // 用户请求充值金额
 	PaymentAmount    float64  // 实际支付金额（含偏移量）
 	CreditAmount     *float64 // 实际到账金额（支付成功后计算存储）
+	RateCoefficient  float64  // 创建订单时的充值系数
 	Status           string
 	CreatedAt        time.Time
 	PaidAt           *time.Time

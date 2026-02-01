@@ -42,6 +42,8 @@ type PaymentOrder struct {
 	PayerAccount *string `json:"payer_account,omitempty"`
 	// CreditAmount holds the value of the "credit_amount" field.
 	CreditAmount *float64 `json:"credit_amount,omitempty"`
+	// RateCoefficient holds the value of the "rate_coefficient" field.
+	RateCoefficient float64 `json:"rate_coefficient,omitempty"`
 	// Notes holds the value of the "notes" field.
 	Notes *string `json:"notes,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -75,7 +77,7 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case paymentorder.FieldAmount, paymentorder.FieldPaymentAmount, paymentorder.FieldCreditAmount:
+		case paymentorder.FieldAmount, paymentorder.FieldPaymentAmount, paymentorder.FieldCreditAmount, paymentorder.FieldRateCoefficient:
 			values[i] = new(sql.NullFloat64)
 		case paymentorder.FieldID, paymentorder.FieldUserID:
 			values[i] = new(sql.NullInt64)
@@ -181,6 +183,12 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				_m.CreditAmount = new(float64)
 				*_m.CreditAmount = value.Float64
 			}
+		case paymentorder.FieldRateCoefficient:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_coefficient", values[i])
+			} else if value.Valid {
+				_m.RateCoefficient = value.Float64
+			}
 		case paymentorder.FieldNotes:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field notes", values[i])
@@ -274,6 +282,9 @@ func (_m *PaymentOrder) String() string {
 		builder.WriteString("credit_amount=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("rate_coefficient=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RateCoefficient))
 	builder.WriteString(", ")
 	if v := _m.Notes; v != nil {
 		builder.WriteString("notes=")

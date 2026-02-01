@@ -448,30 +448,56 @@ func (s *adminServiceImpl) DeleteUser(ctx context.Context, id int64) error {
 }
 
 func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, balance float64, operation string, notes string) (*User, error) {
+	var oldBalance float64
+	var balanceDiff float64
+
+	switch operation {
+	case "set":
+		// 使用原子操作设置余额，返回旧余额
+		var err error
+		oldBalance, err = s.userRepo.SetBalance(ctx, userID, balance)
+		if err != nil {
+			return nil, err
+		}
+		balanceDiff = balance - oldBalance
+	case "add":
+		// 先获取当前余额用于验证
+		user, err := s.userRepo.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		oldBalance = user.Balance
+		// 使用原子操作增加余额
+		if err := s.userRepo.UpdateBalance(ctx, userID, balance); err != nil {
+			return nil, err
+		}
+		balanceDiff = balance
+	case "subtract":
+		// 先获取当前余额用于验证
+		user, err := s.userRepo.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		oldBalance = user.Balance
+		newBalance := oldBalance - balance
+		if newBalance < 0 {
+			return nil, fmt.Errorf("balance cannot be negative, current balance: %.2f, requested operation would result in: %.2f", oldBalance, newBalance)
+		}
+		// 使用原子操作减少余额
+		if err := s.userRepo.UpdateBalance(ctx, userID, -balance); err != nil {
+			return nil, err
+		}
+		balanceDiff = -balance
+	default:
+		return nil, fmt.Errorf("invalid operation: %s", operation)
+	}
+
+	// 重新获取用户信息返回
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	oldBalance := user.Balance
-
-	switch operation {
-	case "set":
-		user.Balance = balance
-	case "add":
-		user.Balance += balance
-	case "subtract":
-		user.Balance -= balance
-	}
-
-	if user.Balance < 0 {
-		return nil, fmt.Errorf("balance cannot be negative, current balance: %.2f, requested operation would result in: %.2f", oldBalance, user.Balance)
-	}
-
-	if err := s.userRepo.Update(ctx, user); err != nil {
-		return nil, err
-	}
-	balanceDiff := user.Balance - oldBalance
 	if s.authCacheInvalidator != nil && balanceDiff != 0 {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 	}

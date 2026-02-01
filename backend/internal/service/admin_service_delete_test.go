@@ -78,6 +78,10 @@ func (s *userRepoStub) DeductBalance(ctx context.Context, id int64, amount float
 	panic("unexpected DeductBalance call")
 }
 
+func (s *userRepoStub) SetBalance(ctx context.Context, id int64, newBalance float64) (float64, error) {
+	panic("unexpected SetBalance call")
+}
+
 func (s *userRepoStub) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	panic("unexpected UpdateConcurrency call")
 }

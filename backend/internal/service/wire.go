@@ -280,13 +280,17 @@ func ProvidePaymentMonitorService(
 		return nil
 	}
 
-	println("[PaymentMonitor] Starting payment monitor service...")
-	println("  - Check interval:", cfg.Payment.Monitor.IntervalSeconds, "seconds")
+	println("[PaymentMonitor] Starting payment monitor service (event-driven mode)...")
+	println("  - Active interval:", cfg.Payment.Monitor.ActiveIntervalSeconds, "seconds")
 	println("  - Order timeout:", cfg.Payment.Monitor.OrderTimeoutMins, "minutes")
 	println("  - Min amount:", cfg.Payment.Monitor.MinAmount)
 	println("  - Max amount:", cfg.Payment.Monitor.MaxAmount)
 
 	svc := NewPaymentMonitorService(alipayClient, paymentService, cfg)
+
+	// 延迟注入：将 MonitorService 注入到 PaymentService
+	paymentService.SetMonitorTrigger(svc)
+
 	svc.Start()
 
 	println("[PaymentMonitor] Service started successfully")

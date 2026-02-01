@@ -80,6 +80,10 @@ func (PaymentOrder) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,2)"}).
 			Optional().
 			Nillable(),
+		// 创建订单时的充值系数（用于计算到账金额）
+		field.Float("rate_coefficient").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}).
+			Default(1.0),
 		// 备注
 		field.String("notes").
 			Optional().

@@ -40,6 +40,12 @@ type PaymentOrderRepository interface {
 	ListAll(ctx context.Context, params pagination.PaginationParams, status, search string) ([]PaymentOrder, *pagination.PaginationResult, error)
 	CleanupExpiredOrders(ctx context.Context) (int64, error)
 	GetStats(ctx context.Context) (*PaymentStats, error)
+	CountPending(ctx context.Context) (int64, error) // 统计待支付订单数量
+}
+
+// PaymentMonitorTrigger 监控服务触发接口（解耦用）
+type PaymentMonitorTrigger interface {
+	Trigger()
 }
 
 // PaymentService 支付服务
@@ -51,7 +57,8 @@ type PaymentService struct {
 	settingService       *SettingService
 	entClient            *dbent.Client
 	cfg                  *config.Config
-	mu                   sync.Mutex // 用于金额分配
+	mu                   sync.Mutex             // 用于金额分配
+	monitorTrigger       PaymentMonitorTrigger  // 监控服务触发器
 }
 
 // NewPaymentService 创建支付服务
@@ -73,6 +80,11 @@ func NewPaymentService(
 		entClient:            entClient,
 		cfg:                  cfg,
 	}
+}
+
+// SetMonitorTrigger 设置监控服务触发器（延迟注入）
+func (s *PaymentService) SetMonitorTrigger(trigger PaymentMonitorTrigger) {
+	s.monitorTrigger = trigger
 }
 
 // GetConfig 获取支付配置
@@ -148,16 +160,22 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, amount f
 	expiredAt := time.Now().Add(time.Duration(s.cfg.Payment.Monitor.OrderTimeoutMins) * time.Minute)
 
 	order := &PaymentOrder{
-		TradeNo:       tradeNo,
-		UserID:        userID,
-		Amount:        amount,
-		PaymentAmount: paymentAmount,
-		Status:        PaymentStatusPending,
-		ExpiredAt:     expiredAt,
+		TradeNo:         tradeNo,
+		UserID:          userID,
+		Amount:          amount,
+		PaymentAmount:   paymentAmount,
+		RateCoefficient: rateCoefficient, // 保存创建时的系数
+		Status:          PaymentStatusPending,
+		ExpiredAt:       expiredAt,
 	}
 
 	if err := s.orderRepo.Create(ctx, order); err != nil {
 		return nil, fmt.Errorf("create order: %w", err)
+	}
+
+	// 通知监控服务有新订单
+	if s.monitorTrigger != nil {
+		s.monitorTrigger.Trigger()
 	}
 
 	return order, nil
@@ -169,11 +187,17 @@ func (s *PaymentService) allocateUniqueAmount(ctx context.Context, baseAmount fl
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 获取最近 5 分钟内已使用的金额
-	usedAmounts, err := s.orderRepo.GetUsedAmounts(ctx, baseAmount, 5)
+	// 使用配置的订单超时时间作为查询窗口，而非硬编码的 5 分钟
+	// 这确保在整个订单有效期内不会分配重复金额
+	timeoutMins := s.cfg.Payment.Monitor.OrderTimeoutMins
+	if timeoutMins <= 0 {
+		timeoutMins = 30 // 默认 30 分钟
+	}
+
+	usedAmounts, err := s.orderRepo.GetUsedAmounts(ctx, baseAmount, timeoutMins)
 	if err != nil {
-		// 如果查询失败，返回基础金额
-		return baseAmount, nil
+		// 如果查询失败，记录日志并返回错误，而非静默返回基础金额
+		return 0, fmt.Errorf("query used amounts failed: %w", err)
 	}
 
 	// 创建已使用金额的 map
@@ -192,8 +216,9 @@ func (s *PaymentService) allocateUniqueAmount(ctx context.Context, baseAmount fl
 		amount += 0.01
 	}
 
-	// 如果超过 100 次尝试仍未找到，返回基础金额
-	return baseAmount, nil
+	// 如果超过 100 次尝试仍未找到，返回错误而非静默回退
+	// 这避免了多个订单获得相同支付金额导致的串单问题
+	return 0, fmt.Errorf("unable to allocate unique payment amount: all 100 offsets for base amount %.2f are in use", baseAmount)
 }
 
 // generateTradeNo 生成交易号
@@ -355,10 +380,15 @@ func (s *PaymentService) completePayment(ctx context.Context, orderID int64, ali
 // 到账金额 = 请求金额 + 偏移量（按系数反推）
 // 例如：请求 $10，系数 0.5，支付 ¥5.01 → 到账 $10.02
 func (s *PaymentService) calculateCreditAmount(ctx context.Context, order *PaymentOrder) float64 {
-	// 获取充值系数
-	rateCoefficient := 1.0
-	if s.settingService != nil {
-		rateCoefficient = s.settingService.GetPaymentRateCoefficient(ctx)
+	// 使用订单创建时保存的系数，而非当前系数
+	// 这确保即使管理员修改了系数，已创建订单的到账金额计算仍然正确
+	rateCoefficient := order.RateCoefficient
+	if rateCoefficient == 0 {
+		// 兼容旧订单（没有保存系数的）
+		rateCoefficient = 1.0
+		if s.settingService != nil {
+			rateCoefficient = s.settingService.GetPaymentRateCoefficient(ctx)
+		}
 	}
 
 	// 如果系数为1，直接返回实际支付金额（无需转换）
@@ -425,4 +455,9 @@ func (s *PaymentService) IsTransLogIDUsed(ctx context.Context, transLogID string
 // CleanupExpiredOrders 清理过期订单
 func (s *PaymentService) CleanupExpiredOrders(ctx context.Context) (int64, error) {
 	return s.orderRepo.CleanupExpiredOrders(ctx)
+}
+
+// CountPendingOrders 统计待支付订单数量
+func (s *PaymentService) CountPendingOrders(ctx context.Context) (int64, error) {
+	return s.orderRepo.CountPending(ctx)
 }

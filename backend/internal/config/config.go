@@ -586,8 +586,10 @@ type AlipayConfig struct {
 type PaymentMonitorConfig struct {
 	// Enabled: 是否启用监控服务
 	Enabled bool `mapstructure:"enabled"`
-	// IntervalSeconds: 轮询间隔（秒）
+	// IntervalSeconds: 轮询间隔（秒）- 保留兼容旧配置
 	IntervalSeconds int `mapstructure:"interval_seconds"`
+	// ActiveIntervalSeconds: 有订单时的轮询间隔（秒）
+	ActiveIntervalSeconds int `mapstructure:"active_interval_seconds"`
 	// OrderTimeoutMins: 订单超时时间（分钟）
 	OrderTimeoutMins int `mapstructure:"order_timeout_mins"`
 	// BusinessQRCode: 经营码二维码图片路径或URL
@@ -940,6 +942,7 @@ func setDefaults() {
 	viper.SetDefault("payment.alipay.sign_type", "RSA2")
 	viper.SetDefault("payment.monitor.enabled", true)
 	viper.SetDefault("payment.monitor.interval_seconds", 30)
+	viper.SetDefault("payment.monitor.active_interval_seconds", 5)
 	viper.SetDefault("payment.monitor.order_timeout_mins", 5)
 	viper.SetDefault("payment.monitor.business_qr_code", "")
 	viper.SetDefault("payment.monitor.min_amount", 1.0)

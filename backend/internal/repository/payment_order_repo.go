@@ -27,6 +27,7 @@ type PaymentOrderRepository interface {
 	ListAll(ctx context.Context, params pagination.PaginationParams, status, search string) ([]service.PaymentOrder, *pagination.PaginationResult, error)
 	CleanupExpiredOrders(ctx context.Context) (int64, error)
 	GetStats(ctx context.Context) (*service.PaymentStats, error)
+	CountPending(ctx context.Context) (int64, error) // 统计待支付订单数量
 }
 
 type paymentOrderRepository struct {
@@ -45,6 +46,7 @@ func (r *paymentOrderRepository) Create(ctx context.Context, order *service.Paym
 		SetUserID(order.UserID).
 		SetAmount(order.Amount).
 		SetPaymentAmount(order.PaymentAmount).
+		SetRateCoefficient(order.RateCoefficient).
 		SetStatus(order.Status).
 		SetExpiredAt(order.ExpiredAt)
 
@@ -126,8 +128,10 @@ func (r *paymentOrderRepository) GetPendingByAmountAfterTime(ctx context.Context
 			paymentorder.PaymentAmountGTE(amount-epsilon),
 			paymentorder.PaymentAmountLTE(amount+epsilon),
 			paymentorder.CreatedAtGTE(threshold),
-			paymentorder.CreatedAtLTE(billTime),  // 订单创建时间必须早于账单时间
-			paymentorder.ExpiredAtGT(time.Now()), // 未过期
+			paymentorder.CreatedAtLTE(billTime), // 订单创建时间必须早于账单时间
+			// 使用 billTime（支付时间）判断过期，而非 time.Now()
+			// 这确保即使监控服务延迟处理，只要用户在过期前支付，订单仍能被匹配
+			paymentorder.ExpiredAtGT(billTime),
 		).
 		Order(dbent.Asc(paymentorder.FieldCreatedAt)).
 		All(ctx)
@@ -204,6 +208,16 @@ func (r *paymentOrderRepository) UpdateToPaid(ctx context.Context, id int64, ali
 		return err
 	}
 	if affected == 0 {
+		// 检查订单是否已支付（用于区分错误类型）
+		order, err := r.client.PaymentOrder.Query().
+			Where(paymentorder.IDEQ(id)).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("order not found or already processed")
+		}
+		if order.Status == service.PaymentStatusPaid {
+			return fmt.Errorf("order already paid")
+		}
 		return fmt.Errorf("order not found or already processed")
 	}
 	return nil
@@ -327,6 +341,8 @@ func (r *paymentOrderRepository) GetStats(ctx context.Context) (*service.Payment
 	stats.TodayOrderCount = int64(todayCount)
 
 	// 今日已支付订单数和金额（按支付时间筛选）
+	// 使用 CreditAmount（到账金额，$）而非 PaymentAmount（支付金额，¥）
+	// 这确保统计数据与前端显示的 $ 符号一致
 	todayPaidOrders, err := r.client.PaymentOrder.Query().
 		Where(
 			paymentorder.PaidAtGTE(todayStart),
@@ -338,7 +354,12 @@ func (r *paymentOrderRepository) GetStats(ctx context.Context) (*service.Payment
 	}
 	stats.TodayPaidCount = int64(len(todayPaidOrders))
 	for _, o := range todayPaidOrders {
-		stats.TodayPaidAmount += o.PaymentAmount
+		if o.CreditAmount != nil {
+			stats.TodayPaidAmount += *o.CreditAmount
+		} else {
+			// 兼容旧数据：如果没有 CreditAmount，使用 PaymentAmount
+			stats.TodayPaidAmount += o.PaymentAmount
+		}
 	}
 
 	// 总订单数
@@ -349,6 +370,7 @@ func (r *paymentOrderRepository) GetStats(ctx context.Context) (*service.Payment
 	stats.TotalOrderCount = int64(totalCount)
 
 	// 总已支付订单数和金额
+	// 使用 CreditAmount（到账金额，$）而非 PaymentAmount（支付金额，¥）
 	allPaidOrders, err := r.client.PaymentOrder.Query().
 		Where(paymentorder.StatusEQ(service.PaymentStatusPaid)).
 		All(ctx)
@@ -357,7 +379,12 @@ func (r *paymentOrderRepository) GetStats(ctx context.Context) (*service.Payment
 	}
 	stats.TotalPaidCount = int64(len(allPaidOrders))
 	for _, o := range allPaidOrders {
-		stats.TotalPaidAmount += o.PaymentAmount
+		if o.CreditAmount != nil {
+			stats.TotalPaidAmount += *o.CreditAmount
+		} else {
+			// 兼容旧数据：如果没有 CreditAmount，使用 PaymentAmount
+			stats.TotalPaidAmount += o.PaymentAmount
+		}
 	}
 
 	// 待支付订单数
@@ -372,6 +399,17 @@ func (r *paymentOrderRepository) GetStats(ctx context.Context) (*service.Payment
 	return stats, nil
 }
 
+// CountPending 统计待支付订单数量（未过期的）
+func (r *paymentOrderRepository) CountPending(ctx context.Context) (int64, error) {
+	count, err := r.client.PaymentOrder.Query().
+		Where(
+			paymentorder.StatusEQ(service.PaymentStatusPending),
+			paymentorder.ExpiredAtGT(time.Now()),
+		).
+		Count(ctx)
+	return int64(count), err
+}
+
 func paymentOrderEntityToService(m *dbent.PaymentOrder) *service.PaymentOrder {
 	if m == nil {
 		return nil
@@ -383,6 +421,7 @@ func paymentOrderEntityToService(m *dbent.PaymentOrder) *service.PaymentOrder {
 		Amount:           m.Amount,
 		PaymentAmount:    m.PaymentAmount,
 		CreditAmount:     m.CreditAmount,
+		RateCoefficient:  m.RateCoefficient,
 		Status:           m.Status,
 		CreatedAt:        m.CreatedAt,
 		PaidAt:           m.PaidAt,

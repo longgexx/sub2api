@@ -348,6 +348,39 @@ func (r *userRepository) DeductBalance(ctx context.Context, id int64, amount flo
 	return nil
 }
 
+// SetBalance 设置用户余额为指定值（原子操作）
+// 返回旧余额值，用于计算差值
+func (r *userRepository) SetBalance(ctx context.Context, id int64, newBalance float64) (float64, error) {
+	client := clientFromContext(ctx, r.client)
+
+	// 使用事务确保读取和更新的原子性
+	tx, err := client.Tx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 使用 FOR UPDATE 锁定行
+	user, err := tx.User.Query().Where(dbuser.IDEQ(id)).ForUpdate().Only(ctx)
+	if err != nil {
+		return 0, translatePersistenceError(err, service.ErrUserNotFound, nil)
+	}
+
+	oldBalance := user.Balance
+
+	// 更新余额
+	_, err = tx.User.UpdateOneID(id).SetBalance(newBalance).Save(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return oldBalance, nil
+}
+
 func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	client := clientFromContext(ctx, r.client)
 	n, err := client.User.Update().Where(dbuser.IDEQ(id)).AddConcurrency(amount).Save(ctx)

@@ -284,6 +284,7 @@ var (
 		{Name: "alipay_trans_log_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 64},
 		{Name: "payer_account", Type: field.TypeString, Nullable: true, Size: 128},
 		{Name: "credit_amount", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "rate_coefficient", Type: field.TypeFloat64, Default: 1, SchemaType: map[string]string{"postgres": "decimal(10,4)"}},
 		{Name: "notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "user_id", Type: field.TypeInt64},
 	}
@@ -295,7 +296,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_users_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[13]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[14]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -304,7 +305,7 @@ var (
 			{
 				Name:    "paymentorder_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[13]},
+				Columns: []*schema.Column{PaymentOrdersColumns[14]},
 			},
 			{
 				Name:    "paymentorder_status",

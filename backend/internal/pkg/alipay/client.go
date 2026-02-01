@@ -23,6 +23,10 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
+// ChinaTimezone 中国时区（Asia/Shanghai, UTC+8）
+// 支付宝 API 使用中国时区，所有时间相关操作应使用此时区
+var ChinaTimezone = time.FixedZone("Asia/Shanghai", 8*60*60)
+
 // BillRecord 账单记录
 type BillRecord struct {
 	TransLogID     string  // 交易流水号
@@ -343,8 +347,9 @@ func (c *Client) QueryBills(startTime, endTime string, pageNo, pageSize int) ([]
 
 // QueryTodayBills 查询今日账单
 func (c *Client) QueryTodayBills() ([]BillRecord, error) {
-	now := time.Now()
-	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	// 使用中国时区，因为支付宝 API 使用中国时区
+	now := time.Now().In(ChinaTimezone)
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, ChinaTimezone)
 	endTime := now
 
 	return c.QueryBills(
@@ -356,7 +361,8 @@ func (c *Client) QueryTodayBills() ([]BillRecord, error) {
 
 // QueryRecentBills 查询最近指定分钟内的账单
 func (c *Client) QueryRecentBills(minutes int) ([]BillRecord, error) {
-	now := time.Now()
+	// 使用中国时区，因为支付宝 API 使用中国时区
+	now := time.Now().In(ChinaTimezone)
 	startTime := now.Add(-time.Duration(minutes) * time.Minute)
 
 	return c.QueryBills(

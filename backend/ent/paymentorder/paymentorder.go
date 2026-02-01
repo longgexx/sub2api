@@ -38,6 +38,8 @@ const (
 	FieldPayerAccount = "payer_account"
 	// FieldCreditAmount holds the string denoting the credit_amount field in the database.
 	FieldCreditAmount = "credit_amount"
+	// FieldRateCoefficient holds the string denoting the rate_coefficient field in the database.
+	FieldRateCoefficient = "rate_coefficient"
 	// FieldNotes holds the string denoting the notes field in the database.
 	FieldNotes = "notes"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -68,6 +70,7 @@ var Columns = []string{
 	FieldAlipayTransLogID,
 	FieldPayerAccount,
 	FieldCreditAmount,
+	FieldRateCoefficient,
 	FieldNotes,
 }
 
@@ -102,6 +105,8 @@ var (
 	AlipayTransLogIDValidator func(string) error
 	// PayerAccountValidator is a validator for the "payer_account" field. It is called by the builders before save.
 	PayerAccountValidator func(string) error
+	// DefaultRateCoefficient holds the default value on creation for the "rate_coefficient" field.
+	DefaultRateCoefficient float64
 )
 
 // OrderOption defines the ordering options for the PaymentOrder queries.
@@ -170,6 +175,11 @@ func ByPayerAccount(opts ...sql.OrderTermOption) OrderOption {
 // ByCreditAmount orders the results by the credit_amount field.
 func ByCreditAmount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreditAmount, opts...).ToFunc()
+}
+
+// ByRateCoefficient orders the results by the rate_coefficient field.
+func ByRateCoefficient(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRateCoefficient, opts...).ToFunc()
 }
 
 // ByNotes orders the results by the notes field.

@@ -352,6 +352,10 @@ func init() {
 	paymentorderDescPayerAccount := paymentorderFields[10].Descriptor()
 	// paymentorder.PayerAccountValidator is a validator for the "payer_account" field. It is called by the builders before save.
 	paymentorder.PayerAccountValidator = paymentorderDescPayerAccount.Validators[0].(func(string) error)
+	// paymentorderDescRateCoefficient is the schema descriptor for rate_coefficient field.
+	paymentorderDescRateCoefficient := paymentorderFields[12].Descriptor()
+	// paymentorder.DefaultRateCoefficient holds the default value on creation for the rate_coefficient field.
+	paymentorder.DefaultRateCoefficient = paymentorderDescRateCoefficient.Default.(float64)
 	promocodeFields := schema.PromoCode{}.Fields()
 	_ = promocodeFields
 	// promocodeDescCode is the schema descriptor for code field.

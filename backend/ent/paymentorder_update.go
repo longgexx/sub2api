@@ -234,6 +234,27 @@ func (_u *PaymentOrderUpdate) ClearCreditAmount() *PaymentOrderUpdate {
 	return _u
 }
 
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (_u *PaymentOrderUpdate) SetRateCoefficient(v float64) *PaymentOrderUpdate {
+	_u.mutation.ResetRateCoefficient()
+	_u.mutation.SetRateCoefficient(v)
+	return _u
+}
+
+// SetNillableRateCoefficient sets the "rate_coefficient" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableRateCoefficient(v *float64) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetRateCoefficient(*v)
+	}
+	return _u
+}
+
+// AddRateCoefficient adds value to the "rate_coefficient" field.
+func (_u *PaymentOrderUpdate) AddRateCoefficient(v float64) *PaymentOrderUpdate {
+	_u.mutation.AddRateCoefficient(v)
+	return _u
+}
+
 // SetNotes sets the "notes" field.
 func (_u *PaymentOrderUpdate) SetNotes(v string) *PaymentOrderUpdate {
 	_u.mutation.SetNotes(v)
@@ -410,6 +431,12 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if _u.mutation.CreditAmountCleared() {
 		_spec.ClearField(paymentorder.FieldCreditAmount, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.RateCoefficient(); ok {
+		_spec.SetField(paymentorder.FieldRateCoefficient, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedRateCoefficient(); ok {
+		_spec.AddField(paymentorder.FieldRateCoefficient, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.Notes(); ok {
 		_spec.SetField(paymentorder.FieldNotes, field.TypeString, value)
@@ -671,6 +698,27 @@ func (_u *PaymentOrderUpdateOne) ClearCreditAmount() *PaymentOrderUpdateOne {
 	return _u
 }
 
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (_u *PaymentOrderUpdateOne) SetRateCoefficient(v float64) *PaymentOrderUpdateOne {
+	_u.mutation.ResetRateCoefficient()
+	_u.mutation.SetRateCoefficient(v)
+	return _u
+}
+
+// SetNillableRateCoefficient sets the "rate_coefficient" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableRateCoefficient(v *float64) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetRateCoefficient(*v)
+	}
+	return _u
+}
+
+// AddRateCoefficient adds value to the "rate_coefficient" field.
+func (_u *PaymentOrderUpdateOne) AddRateCoefficient(v float64) *PaymentOrderUpdateOne {
+	_u.mutation.AddRateCoefficient(v)
+	return _u
+}
+
 // SetNotes sets the "notes" field.
 func (_u *PaymentOrderUpdateOne) SetNotes(v string) *PaymentOrderUpdateOne {
 	_u.mutation.SetNotes(v)
@@ -877,6 +925,12 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if _u.mutation.CreditAmountCleared() {
 		_spec.ClearField(paymentorder.FieldCreditAmount, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.RateCoefficient(); ok {
+		_spec.SetField(paymentorder.FieldRateCoefficient, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedRateCoefficient(); ok {
+		_spec.AddField(paymentorder.FieldRateCoefficient, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.Notes(); ok {
 		_spec.SetField(paymentorder.FieldNotes, field.TypeString, value)

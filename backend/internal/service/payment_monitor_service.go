@@ -14,6 +14,7 @@ import (
 
 // PaymentMonitorService 支付监控服务
 // 定时查询支付宝账单，自动匹配并确认待支付订单
+// 采用事件驱动模式：有订单时高频轮询，无订单时暂停
 type PaymentMonitorService struct {
 	alipayClient   *alipay.Client
 	paymentService *PaymentService
@@ -23,6 +24,8 @@ type PaymentMonitorService struct {
 	ctx            context.Context
 	cancel         context.CancelFunc
 	lastCheckTime  time.Time
+	triggerChan    chan struct{} // 事件通知 channel
+	activeInterval time.Duration // 有订单时的轮询间隔
 }
 
 // NewPaymentMonitorService 创建支付监控服务
@@ -31,14 +34,21 @@ func NewPaymentMonitorService(
 	paymentService *PaymentService,
 	cfg *config.Config,
 ) *PaymentMonitorService {
+	activeInterval := time.Duration(cfg.Payment.Monitor.ActiveIntervalSeconds) * time.Second
+	if activeInterval == 0 {
+		activeInterval = 5 * time.Second // 默认 5 秒
+	}
+
 	return &PaymentMonitorService{
 		alipayClient:   alipayClient,
 		paymentService: paymentService,
 		cfg:            cfg,
+		triggerChan:    make(chan struct{}, 1), // 带缓冲，避免阻塞
+		activeInterval: activeInterval,
 	}
 }
 
-// Start 启动监控服务
+// Start 启动监控服务（事件驱动模式）
 func (s *PaymentMonitorService) Start() {
 	s.mu.Lock()
 	if s.running {
@@ -49,27 +59,82 @@ func (s *PaymentMonitorService) Start() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.mu.Unlock()
 
-	log.Println("[PaymentMonitor] service started")
-
-	interval := time.Duration(s.cfg.Payment.Monitor.IntervalSeconds) * time.Second
+	log.Println("[PaymentMonitor] service started (event-driven mode)")
 
 	go func() {
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
+		ctx := context.Background()
 
-		// 立即执行一次
-		s.RunCycle()
+		// 初始检查：是否有待支付订单
+		hasPending := s.checkPendingOrders(ctx)
+		if hasPending {
+			log.Println("[PaymentMonitor] found pending orders on startup, entering active mode")
+			s.runActiveLoop(ctx)
+		}
 
 		for {
 			select {
 			case <-s.ctx.Done():
 				log.Println("[PaymentMonitor] service stopped")
 				return
-			case <-ticker.C:
-				s.RunCycle()
+
+			case <-s.triggerChan:
+				// 收到新订单通知，立即检查并进入高频轮询
+				log.Println("[PaymentMonitor] triggered by new order")
+				s.runActiveLoop(ctx)
 			}
 		}
 	}()
+}
+
+// Trigger 触发一次检查（非阻塞）
+func (s *PaymentMonitorService) Trigger() {
+	select {
+	case s.triggerChan <- struct{}{}:
+	default:
+		// channel 已满，说明已有待处理的触发，忽略
+	}
+}
+
+// checkPendingOrders 检查是否有待支付订单
+func (s *PaymentMonitorService) checkPendingOrders(ctx context.Context) bool {
+	count, err := s.paymentService.CountPendingOrders(ctx)
+	if err != nil {
+		log.Printf("[PaymentMonitor] check pending orders failed: %v", err)
+		return true // 保守策略：错误时假设有订单，继续轮询
+	}
+	return count > 0
+}
+
+// runActiveLoop 有订单时的高频轮询循环
+func (s *PaymentMonitorService) runActiveLoop(ctx context.Context) {
+	ticker := time.NewTicker(s.activeInterval)
+	defer ticker.Stop()
+
+	for {
+		s.RunCycle()
+
+		// 检查是否还有待支付订单
+		if !s.checkPendingOrders(ctx) {
+			// 退出前检查是否有新的触发（防止 Trigger 丢失）
+			select {
+			case <-s.triggerChan:
+				// 有新订单，继续轮询
+				continue
+			default:
+				log.Println("[PaymentMonitor] no pending orders, entering idle mode")
+				return // 退出高频轮询，回到等待状态
+			}
+		}
+
+		select {
+		case <-s.ctx.Done():
+			return
+		case <-s.triggerChan:
+			// 有新订单，继续轮询（重置计时器效果）
+		case <-ticker.C:
+			// 定时触发
+		}
+	}
 }
 
 // Stop 停止监控服务
@@ -151,8 +216,8 @@ func (s *PaymentMonitorService) processBills(ctx context.Context, bills []alipay
 		// 规范化金额（保留2位小数，避免浮点精度问题）
 		amount := math.Round(math.Abs(bill.Amount)*100) / 100
 
-		// 解析账单时间
-		billTime, err := time.ParseInLocation("2006-01-02 15:04:05", bill.TransTime, time.Local)
+		// 解析账单时间（使用中国时区，因为支付宝返回的时间是中国时区）
+		billTime, err := time.ParseInLocation("2006-01-02 15:04:05", bill.TransTime, alipay.ChinaTimezone)
 		if err != nil {
 			log.Printf("[PaymentMonitor] invalid bill time format: %s, error: %v", bill.TransTime, err)
 			continue
@@ -167,7 +232,14 @@ func (s *PaymentMonitorService) processBills(ctx context.Context, bills []alipay
 
 		// 完成支付（alipayTradeNo 留空，经营码模式下没有交易号；保存账单流水号和付款人账户）
 		if err := s.paymentService.CompletePayment(ctx, order.ID, "", bill.TransLogID, bill.OtherAccount); err != nil {
-			log.Printf("[PaymentMonitor] complete payment failed: order=%s, error=%v", order.TradeNo, err)
+			// 区分错误类型，记录未匹配的账单
+			if strings.Contains(err.Error(), "already paid") || strings.Contains(err.Error(), "already processed") {
+				// 订单已被其他账单匹配，记录这笔账单供人工处理
+				log.Printf("[PaymentMonitor] WARNING: bill not matched - trans_log_id=%s, amount=%.2f, payer=%s, reason: order %s already paid",
+					bill.TransLogID, amount, bill.OtherAccount, order.TradeNo)
+			} else {
+				log.Printf("[PaymentMonitor] complete payment failed: order=%s, error=%v", order.TradeNo, err)
+			}
 			continue
 		}
 

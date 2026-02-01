@@ -151,6 +151,20 @@ func (_c *PaymentOrderCreate) SetNillableCreditAmount(v *float64) *PaymentOrderC
 	return _c
 }
 
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (_c *PaymentOrderCreate) SetRateCoefficient(v float64) *PaymentOrderCreate {
+	_c.mutation.SetRateCoefficient(v)
+	return _c
+}
+
+// SetNillableRateCoefficient sets the "rate_coefficient" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableRateCoefficient(v *float64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetRateCoefficient(*v)
+	}
+	return _c
+}
+
 // SetNotes sets the "notes" field.
 func (_c *PaymentOrderCreate) SetNotes(v string) *PaymentOrderCreate {
 	_c.mutation.SetNotes(v)
@@ -212,6 +226,10 @@ func (_c *PaymentOrderCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := paymentorder.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.RateCoefficient(); !ok {
+		v := paymentorder.DefaultRateCoefficient
+		_c.mutation.SetRateCoefficient(v)
 	}
 }
 
@@ -277,6 +295,9 @@ func (_c *PaymentOrderCreate) check() error {
 		if err := paymentorder.PayerAccountValidator(v); err != nil {
 			return &ValidationError{Name: "payer_account", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.payer_account": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.RateCoefficient(); !ok {
+		return &ValidationError{Name: "rate_coefficient", err: errors.New(`ent: missing required field "PaymentOrder.rate_coefficient"`)}
 	}
 	if len(_c.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "PaymentOrder.user"`)}
@@ -351,6 +372,10 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.CreditAmount(); ok {
 		_spec.SetField(paymentorder.FieldCreditAmount, field.TypeFloat64, value)
 		_node.CreditAmount = &value
+	}
+	if value, ok := _c.mutation.RateCoefficient(); ok {
+		_spec.SetField(paymentorder.FieldRateCoefficient, field.TypeFloat64, value)
+		_node.RateCoefficient = value
 	}
 	if value, ok := _c.mutation.Notes(); ok {
 		_spec.SetField(paymentorder.FieldNotes, field.TypeString, value)
@@ -602,6 +627,24 @@ func (u *PaymentOrderUpsert) AddCreditAmount(v float64) *PaymentOrderUpsert {
 // ClearCreditAmount clears the value of the "credit_amount" field.
 func (u *PaymentOrderUpsert) ClearCreditAmount() *PaymentOrderUpsert {
 	u.SetNull(paymentorder.FieldCreditAmount)
+	return u
+}
+
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (u *PaymentOrderUpsert) SetRateCoefficient(v float64) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldRateCoefficient, v)
+	return u
+}
+
+// UpdateRateCoefficient sets the "rate_coefficient" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateRateCoefficient() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldRateCoefficient)
+	return u
+}
+
+// AddRateCoefficient adds v to the "rate_coefficient" field.
+func (u *PaymentOrderUpsert) AddRateCoefficient(v float64) *PaymentOrderUpsert {
+	u.Add(paymentorder.FieldRateCoefficient, v)
 	return u
 }
 
@@ -875,6 +918,27 @@ func (u *PaymentOrderUpsertOne) UpdateCreditAmount() *PaymentOrderUpsertOne {
 func (u *PaymentOrderUpsertOne) ClearCreditAmount() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearCreditAmount()
+	})
+}
+
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (u *PaymentOrderUpsertOne) SetRateCoefficient(v float64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRateCoefficient(v)
+	})
+}
+
+// AddRateCoefficient adds v to the "rate_coefficient" field.
+func (u *PaymentOrderUpsertOne) AddRateCoefficient(v float64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddRateCoefficient(v)
+	})
+}
+
+// UpdateRateCoefficient sets the "rate_coefficient" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateRateCoefficient() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRateCoefficient()
 	})
 }
 
@@ -1317,6 +1381,27 @@ func (u *PaymentOrderUpsertBulk) UpdateCreditAmount() *PaymentOrderUpsertBulk {
 func (u *PaymentOrderUpsertBulk) ClearCreditAmount() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearCreditAmount()
+	})
+}
+
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (u *PaymentOrderUpsertBulk) SetRateCoefficient(v float64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetRateCoefficient(v)
+	})
+}
+
+// AddRateCoefficient adds v to the "rate_coefficient" field.
+func (u *PaymentOrderUpsertBulk) AddRateCoefficient(v float64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddRateCoefficient(v)
+	})
+}
+
+// UpdateRateCoefficient sets the "rate_coefficient" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateRateCoefficient() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateRateCoefficient()
 	})
 }
 

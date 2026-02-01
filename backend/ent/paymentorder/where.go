@@ -115,6 +115,11 @@ func CreditAmount(v float64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldCreditAmount, v))
 }
 
+// RateCoefficient applies equality check predicate on the "rate_coefficient" field. It's identical to RateCoefficientEQ.
+func RateCoefficient(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldRateCoefficient, v))
+}
+
 // Notes applies equality check predicate on the "notes" field. It's identical to NotesEQ.
 func Notes(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldNotes, v))
@@ -753,6 +758,46 @@ func CreditAmountIsNil() predicate.PaymentOrder {
 // CreditAmountNotNil applies the NotNil predicate on the "credit_amount" field.
 func CreditAmountNotNil() predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldNotNull(FieldCreditAmount))
+}
+
+// RateCoefficientEQ applies the EQ predicate on the "rate_coefficient" field.
+func RateCoefficientEQ(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldRateCoefficient, v))
+}
+
+// RateCoefficientNEQ applies the NEQ predicate on the "rate_coefficient" field.
+func RateCoefficientNEQ(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldRateCoefficient, v))
+}
+
+// RateCoefficientIn applies the In predicate on the "rate_coefficient" field.
+func RateCoefficientIn(vs ...float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldRateCoefficient, vs...))
+}
+
+// RateCoefficientNotIn applies the NotIn predicate on the "rate_coefficient" field.
+func RateCoefficientNotIn(vs ...float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldRateCoefficient, vs...))
+}
+
+// RateCoefficientGT applies the GT predicate on the "rate_coefficient" field.
+func RateCoefficientGT(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldRateCoefficient, v))
+}
+
+// RateCoefficientGTE applies the GTE predicate on the "rate_coefficient" field.
+func RateCoefficientGTE(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldRateCoefficient, v))
+}
+
+// RateCoefficientLT applies the LT predicate on the "rate_coefficient" field.
+func RateCoefficientLT(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldRateCoefficient, v))
+}
+
+// RateCoefficientLTE applies the LTE predicate on the "rate_coefficient" field.
+func RateCoefficientLTE(v float64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldRateCoefficient, v))
 }
 
 // NotesEQ applies the EQ predicate on the "notes" field.

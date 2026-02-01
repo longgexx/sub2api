@@ -6472,6 +6472,8 @@ type PaymentOrderMutation struct {
 	payer_account       *string
 	credit_amount       *float64
 	addcredit_amount    *float64
+	rate_coefficient    *float64
+	addrate_coefficient *float64
 	notes               *string
 	clearedFields       map[string]struct{}
 	user                *int64
@@ -7137,6 +7139,62 @@ func (m *PaymentOrderMutation) ResetCreditAmount() {
 	delete(m.clearedFields, paymentorder.FieldCreditAmount)
 }
 
+// SetRateCoefficient sets the "rate_coefficient" field.
+func (m *PaymentOrderMutation) SetRateCoefficient(f float64) {
+	m.rate_coefficient = &f
+	m.addrate_coefficient = nil
+}
+
+// RateCoefficient returns the value of the "rate_coefficient" field in the mutation.
+func (m *PaymentOrderMutation) RateCoefficient() (r float64, exists bool) {
+	v := m.rate_coefficient
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRateCoefficient returns the old "rate_coefficient" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldRateCoefficient(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRateCoefficient is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRateCoefficient requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRateCoefficient: %w", err)
+	}
+	return oldValue.RateCoefficient, nil
+}
+
+// AddRateCoefficient adds f to the "rate_coefficient" field.
+func (m *PaymentOrderMutation) AddRateCoefficient(f float64) {
+	if m.addrate_coefficient != nil {
+		*m.addrate_coefficient += f
+	} else {
+		m.addrate_coefficient = &f
+	}
+}
+
+// AddedRateCoefficient returns the value that was added to the "rate_coefficient" field in this mutation.
+func (m *PaymentOrderMutation) AddedRateCoefficient() (r float64, exists bool) {
+	v := m.addrate_coefficient
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRateCoefficient resets all changes to the "rate_coefficient" field.
+func (m *PaymentOrderMutation) ResetRateCoefficient() {
+	m.rate_coefficient = nil
+	m.addrate_coefficient = nil
+}
+
 // SetNotes sets the "notes" field.
 func (m *PaymentOrderMutation) SetNotes(s string) {
 	m.notes = &s
@@ -7247,7 +7305,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.trade_no != nil {
 		fields = append(fields, paymentorder.FieldTradeNo)
 	}
@@ -7284,6 +7342,9 @@ func (m *PaymentOrderMutation) Fields() []string {
 	if m.credit_amount != nil {
 		fields = append(fields, paymentorder.FieldCreditAmount)
 	}
+	if m.rate_coefficient != nil {
+		fields = append(fields, paymentorder.FieldRateCoefficient)
+	}
 	if m.notes != nil {
 		fields = append(fields, paymentorder.FieldNotes)
 	}
@@ -7319,6 +7380,8 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.PayerAccount()
 	case paymentorder.FieldCreditAmount:
 		return m.CreditAmount()
+	case paymentorder.FieldRateCoefficient:
+		return m.RateCoefficient()
 	case paymentorder.FieldNotes:
 		return m.Notes()
 	}
@@ -7354,6 +7417,8 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldPayerAccount(ctx)
 	case paymentorder.FieldCreditAmount:
 		return m.OldCreditAmount(ctx)
+	case paymentorder.FieldRateCoefficient:
+		return m.OldRateCoefficient(ctx)
 	case paymentorder.FieldNotes:
 		return m.OldNotes(ctx)
 	}
@@ -7449,6 +7514,13 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreditAmount(v)
 		return nil
+	case paymentorder.FieldRateCoefficient:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRateCoefficient(v)
+		return nil
 	case paymentorder.FieldNotes:
 		v, ok := value.(string)
 		if !ok {
@@ -7473,6 +7545,9 @@ func (m *PaymentOrderMutation) AddedFields() []string {
 	if m.addcredit_amount != nil {
 		fields = append(fields, paymentorder.FieldCreditAmount)
 	}
+	if m.addrate_coefficient != nil {
+		fields = append(fields, paymentorder.FieldRateCoefficient)
+	}
 	return fields
 }
 
@@ -7487,6 +7562,8 @@ func (m *PaymentOrderMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedPaymentAmount()
 	case paymentorder.FieldCreditAmount:
 		return m.AddedCreditAmount()
+	case paymentorder.FieldRateCoefficient:
+		return m.AddedRateCoefficient()
 	}
 	return nil, false
 }
@@ -7516,6 +7593,13 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddCreditAmount(v)
+		return nil
+	case paymentorder.FieldRateCoefficient:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRateCoefficient(v)
 		return nil
 	}
 	return fmt.Errorf("unknown PaymentOrder numeric field %s", name)
@@ -7618,6 +7702,9 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 		return nil
 	case paymentorder.FieldCreditAmount:
 		m.ResetCreditAmount()
+		return nil
+	case paymentorder.FieldRateCoefficient:
+		m.ResetRateCoefficient()
 		return nil
 	case paymentorder.FieldNotes:
 		m.ResetNotes()
