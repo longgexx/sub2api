@@ -35,7 +35,7 @@ func NewPaymentMonitorService(
 ) *PaymentMonitorService {
 	activeInterval := time.Duration(cfg.Payment.Monitor.ActiveIntervalSeconds) * time.Second
 	if activeInterval == 0 {
-		activeInterval = 5 * time.Second // 默认 5 秒
+		activeInterval = 20 * time.Second // 默认 20 秒
 	}
 
 	return &PaymentMonitorService{
