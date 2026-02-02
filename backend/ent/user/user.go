@@ -63,6 +63,10 @@ const (
 	EdgePaymentOrders = "payment_orders"
 	// EdgeRedeemStats holds the string denoting the redeem_stats edge name in mutations.
 	EdgeRedeemStats = "redeem_stats"
+	// EdgeAnnouncements holds the string denoting the announcements edge name in mutations.
+	EdgeAnnouncements = "announcements"
+	// EdgeAnnouncementReads holds the string denoting the announcement_reads edge name in mutations.
+	EdgeAnnouncementReads = "announcement_reads"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -135,6 +139,20 @@ const (
 	RedeemStatsInverseTable = "user_redeem_stats"
 	// RedeemStatsColumn is the table column denoting the redeem_stats relation/edge.
 	RedeemStatsColumn = "user_id"
+	// AnnouncementsTable is the table that holds the announcements relation/edge.
+	AnnouncementsTable = "announcements"
+	// AnnouncementsInverseTable is the table name for the Announcement entity.
+	// It exists in this package in order to avoid circular dependency with the "announcement" package.
+	AnnouncementsInverseTable = "announcements"
+	// AnnouncementsColumn is the table column denoting the announcements relation/edge.
+	AnnouncementsColumn = "created_by"
+	// AnnouncementReadsTable is the table that holds the announcement_reads relation/edge.
+	AnnouncementReadsTable = "announcement_reads"
+	// AnnouncementReadsInverseTable is the table name for the AnnouncementRead entity.
+	// It exists in this package in order to avoid circular dependency with the "announcementread" package.
+	AnnouncementReadsInverseTable = "announcement_reads"
+	// AnnouncementReadsColumn is the table column denoting the announcement_reads relation/edge.
+	AnnouncementReadsColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -437,6 +455,34 @@ func ByRedeemStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByAnnouncementsCount orders the results by announcements count.
+func ByAnnouncementsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAnnouncementsStep(), opts...)
+	}
+}
+
+// ByAnnouncements orders the results by announcements terms.
+func ByAnnouncements(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAnnouncementsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAnnouncementReadsCount orders the results by announcement_reads count.
+func ByAnnouncementReadsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAnnouncementReadsStep(), opts...)
+	}
+}
+
+// ByAnnouncementReads orders the results by announcement_reads terms.
+func ByAnnouncementReads(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAnnouncementReadsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -518,6 +564,20 @@ func newRedeemStatsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RedeemStatsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RedeemStatsTable, RedeemStatsColumn),
+	)
+}
+func newAnnouncementsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AnnouncementsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AnnouncementsTable, AnnouncementsColumn),
+	)
+}
+func newAnnouncementReadsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AnnouncementReadsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AnnouncementReadsTable, AnnouncementReadsColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

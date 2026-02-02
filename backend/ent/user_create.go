@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/announcement"
+	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
@@ -359,6 +361,36 @@ func (_c *UserCreate) AddRedeemStats(v ...*UserRedeemStat) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRedeemStatIDs(ids...)
+}
+
+// AddAnnouncementIDs adds the "announcements" edge to the Announcement entity by IDs.
+func (_c *UserCreate) AddAnnouncementIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddAnnouncementIDs(ids...)
+	return _c
+}
+
+// AddAnnouncements adds the "announcements" edges to the Announcement entity.
+func (_c *UserCreate) AddAnnouncements(v ...*Announcement) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAnnouncementIDs(ids...)
+}
+
+// AddAnnouncementReadIDs adds the "announcement_reads" edge to the AnnouncementRead entity by IDs.
+func (_c *UserCreate) AddAnnouncementReadIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddAnnouncementReadIDs(ids...)
+	return _c
+}
+
+// AddAnnouncementReads adds the "announcement_reads" edges to the AnnouncementRead entity.
+func (_c *UserCreate) AddAnnouncementReads(v ...*AnnouncementRead) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAnnouncementReadIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -743,6 +775,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userredeemstat.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AnnouncementsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AnnouncementsTable,
+			Columns: []string{user.AnnouncementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(announcement.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AnnouncementReadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AnnouncementReadsTable,
+			Columns: []string{user.AnnouncementReadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(announcementread.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

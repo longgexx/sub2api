@@ -25,6 +25,7 @@ type AdminHandlers struct {
 	Usage            *admin.UsageHandler
 	UserAttribute    *admin.UserAttributeHandler
 	Payment          *admin.PaymentHandler
+	Announcement     *admin.AnnouncementHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -41,6 +42,7 @@ type Handlers struct {
 	Setting       *SettingHandler
 	Totp          *TotpHandler
 	Payment       *PaymentHandler
+	Announcement  *AnnouncementHandler
 }
 
 // BuildInfo contains build-time information

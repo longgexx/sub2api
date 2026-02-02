@@ -70,6 +70,9 @@ func RegisterAdminRoutes(
 
 		// 支付订单管理
 		registerPaymentRoutes(admin, h)
+
+		// 公告管理
+		registerAnnouncementRoutes(admin, h)
 	}
 }
 
@@ -404,5 +407,18 @@ func registerPaymentRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		payment.GET("/monitor/status", h.Admin.Payment.GetMonitorStatus)
 		payment.POST("/monitor/start", h.Admin.Payment.StartMonitor)
 		payment.POST("/monitor/stop", h.Admin.Payment.StopMonitor)
+	}
+}
+
+func registerAnnouncementRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	announcements := admin.Group("/announcements")
+	{
+		announcements.GET("", h.Admin.Announcement.List)
+		announcements.GET("/:id", h.Admin.Announcement.GetByID)
+		announcements.POST("", h.Admin.Announcement.Create)
+		announcements.PUT("/:id", h.Admin.Announcement.Update)
+		announcements.DELETE("/:id", h.Admin.Announcement.Delete)
+		announcements.POST("/:id/publish", h.Admin.Announcement.Publish)
+		announcements.POST("/:id/archive", h.Admin.Announcement.Archive)
 	}
 }

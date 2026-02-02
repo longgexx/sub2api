@@ -89,5 +89,15 @@ func RegisterUserRoutes(
 			payment.GET("/orders/:trade_no", h.Payment.GetOrder)
 			payment.DELETE("/orders/:trade_no", h.Payment.CancelOrder)
 		}
+
+		// 公告通知
+		announcements := authenticated.Group("/announcements")
+		{
+			announcements.GET("", h.Announcement.GetActiveAnnouncements)
+			announcements.GET("/unread", h.Announcement.GetUnreadAnnouncements)
+			announcements.GET("/unread/count", h.Announcement.GetUnreadCount)
+			announcements.POST("/:id/read", h.Announcement.MarkAsRead)
+			announcements.POST("/read-all", h.Announcement.MarkAllAsRead)
+		}
 	}
 }

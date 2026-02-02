@@ -71,6 +71,7 @@ var ProviderSet = wire.NewSet(
 	NewUserAttributeValueRepository,
 	NewPaymentOrderRepository,
 	wire.Bind(new(service.PaymentOrderRepository), new(*paymentOrderRepository)),
+	NewAnnouncementRepository,
 
 	// Cache implementations
 	NewGatewayCache,

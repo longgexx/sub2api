@@ -361,6 +361,18 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'admin.payment.description'
     }
   },
+  {
+    path: '/admin/announcements',
+    name: 'AdminAnnouncements',
+    component: () => import('@/views/admin/AnnouncementsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Announcement Management',
+      titleKey: 'admin.announcement.title',
+      descriptionKey: 'admin.announcement.description'
+    }
+  },
 
   // ==================== 404 Not Found ====================
   {

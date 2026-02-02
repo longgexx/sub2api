@@ -1,4 +1,7 @@
 export default {
+  // Locale identifier
+  locale: 'zh',
+
   // Home Page
   home: {
     viewOnGithub: '在 GitHub 上查看',
@@ -181,6 +184,24 @@ export default {
     }
   },
 
+  // Announcement (User-facing)
+  announcement: {
+    type: {
+      info: '通知',
+      warning: '警告',
+      important: '重要'
+    },
+    dialog: {
+      title: '系统公告',
+      empty: '暂无公告',
+      markRead: '标记已读',
+      markAllRead: '全部已读',
+      markAllReadSuccess: '已全部标记为已读',
+      markReadError: '标记已读失败',
+      read: '已读'
+    }
+  },
+
   // Navigation
   nav: {
     dashboard: '仪表盘',
@@ -189,6 +210,7 @@ export default {
     redeem: '兑换',
     topup: '充值',
     paymentOrders: '支付订单',
+    announcements: '公告管理',
     profile: '个人资料',
     users: '用户管理',
     groups: '分组管理',
@@ -2391,6 +2413,65 @@ export default {
       monitorStopped: '监控服务已停止',
       monitorStartFailed: '启动监控失败',
       monitorStopFailed: '停止监控失败'
+    },
+
+    // Announcement Management
+    announcement: {
+      title: '公告管理',
+      description: '管理系统公告通知',
+      create: '创建公告',
+      edit: '编辑公告',
+      publish: '发布',
+      archive: '归档',
+      searchPlaceholder: '搜索公告...',
+      allStatus: '全部状态',
+      neverExpires: '永不过期',
+      contentHint: '支持简单格式：**粗体**、*斜体*、`代码`',
+      status: {
+        draft: '草稿',
+        published: '已发布',
+        archived: '已归档'
+      },
+      columns: {
+        title: '标题',
+        type: '类型',
+        status: '状态',
+        priority: '优先级',
+        publishAt: '发布时间',
+        expiresAt: '过期时间',
+        createdAt: '创建时间',
+        actions: '操作'
+      },
+      fields: {
+        title: '标题',
+        content: '内容',
+        type: '类型',
+        priority: '优先级',
+        publishAt: '定时发布',
+        expiresAt: '过期时间'
+      },
+      placeholders: {
+        title: '请输入公告标题',
+        content: '请输入公告内容...'
+      },
+      created: '公告已创建',
+      updated: '公告已更新',
+      published: '公告已发布',
+      archived: '公告已归档',
+      deleted: '公告已删除',
+      deleteTitle: '删除公告',
+      deleteConfirm: '确定要删除这条公告吗？此操作不可恢复。',
+      failedToLoad: '加载公告失败',
+      failedToSave: '保存公告失败',
+      failedToPublish: '发布公告失败',
+      failedToArchive: '归档公告失败',
+      failedToDelete: '删除公告失败',
+      validation: {
+        titleRequired: '请输入公告标题',
+        titleTooLong: '标题不能超过255个字符',
+        contentRequired: '请输入公告内容',
+        expiresBeforePublish: '过期时间必须晚于发布时间'
+      }
     },
 
     // Usage Records

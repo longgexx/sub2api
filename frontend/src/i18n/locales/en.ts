@@ -1,4 +1,7 @@
 export default {
+  // Locale identifier
+  locale: 'en',
+
   // Home Page
   home: {
     viewOnGithub: 'View on GitHub',
@@ -184,6 +187,24 @@ export default {
     }
   },
 
+  // Announcement (User-facing)
+  announcement: {
+    type: {
+      info: 'Info',
+      warning: 'Warning',
+      important: 'Important'
+    },
+    dialog: {
+      title: 'Announcements',
+      empty: 'No announcements',
+      markRead: 'Mark as read',
+      markAllRead: 'Mark all as read',
+      markAllReadSuccess: 'All marked as read',
+      markReadError: 'Failed to mark as read',
+      read: 'Read'
+    }
+  },
+
   // Navigation
   nav: {
     dashboard: 'Dashboard',
@@ -200,6 +221,7 @@ export default {
     redeemRules: 'Redeem Rules',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
+    announcements: 'Announcements',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',
@@ -2244,6 +2266,65 @@ export default {
       monitorStopped: 'Monitor service stopped',
       monitorStartFailed: 'Failed to start monitor',
       monitorStopFailed: 'Failed to stop monitor'
+    },
+
+    // Announcement Management
+    announcement: {
+      title: 'Announcements',
+      description: 'Manage system announcements',
+      create: 'Create Announcement',
+      edit: 'Edit Announcement',
+      publish: 'Publish',
+      archive: 'Archive',
+      searchPlaceholder: 'Search announcements...',
+      allStatus: 'All Status',
+      neverExpires: 'Never expires',
+      contentHint: 'Supports simple formatting: **bold**, *italic*, `code`',
+      status: {
+        draft: 'Draft',
+        published: 'Published',
+        archived: 'Archived'
+      },
+      columns: {
+        title: 'Title',
+        type: 'Type',
+        status: 'Status',
+        priority: 'Priority',
+        publishAt: 'Publish At',
+        expiresAt: 'Expires At',
+        createdAt: 'Created At',
+        actions: 'Actions'
+      },
+      fields: {
+        title: 'Title',
+        content: 'Content',
+        type: 'Type',
+        priority: 'Priority',
+        publishAt: 'Scheduled Publish',
+        expiresAt: 'Expires At'
+      },
+      placeholders: {
+        title: 'Enter announcement title',
+        content: 'Enter announcement content...'
+      },
+      created: 'Announcement created',
+      updated: 'Announcement updated',
+      published: 'Announcement published',
+      archived: 'Announcement archived',
+      deleted: 'Announcement deleted',
+      deleteTitle: 'Delete Announcement',
+      deleteConfirm: 'Are you sure you want to delete this announcement? This action cannot be undone.',
+      failedToLoad: 'Failed to load announcements',
+      failedToSave: 'Failed to save announcement',
+      failedToPublish: 'Failed to publish announcement',
+      failedToArchive: 'Failed to archive announcement',
+      failedToDelete: 'Failed to delete announcement',
+      validation: {
+        titleRequired: 'Please enter announcement title',
+        titleTooLong: 'Title cannot exceed 255 characters',
+        contentRequired: 'Please enter announcement content',
+        expiresBeforePublish: 'Expiration time must be after publish time'
+      }
     },
 
     // Usage Records

@@ -327,6 +327,13 @@ func ProvideRedeemRuleService(ruleRepo RedeemRuleFullRepository) *RedeemRuleServ
 	return NewRedeemRuleService(ruleRepo)
 }
 
+// ProvideAnnouncementSchedulerService 创建并启动公告定时发布服务
+func ProvideAnnouncementSchedulerService(announcementRepo AnnouncementRepository) *AnnouncementSchedulerService {
+	svc := NewAnnouncementSchedulerService(announcementRepo, time.Minute)
+	svc.Start()
+	return svc
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
@@ -394,4 +401,6 @@ var ProviderSet = wire.NewSet(
 	NewPaymentService,
 	ProvideAlipayClient,
 	ProvidePaymentMonitorService,
+	NewAnnouncementService,
+	ProvideAnnouncementSchedulerService,
 )

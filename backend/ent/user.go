@@ -73,11 +73,15 @@ type UserEdges struct {
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// RedeemStats holds the value of the redeem_stats edge.
 	RedeemStats []*UserRedeemStat `json:"redeem_stats,omitempty"`
+	// Announcements holds the value of the announcements edge.
+	Announcements []*Announcement `json:"announcements,omitempty"`
+	// AnnouncementReads holds the value of the announcement_reads edge.
+	AnnouncementReads []*AnnouncementRead `json:"announcement_reads,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [11]bool
+	loadedTypes [13]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -170,10 +174,28 @@ func (e UserEdges) RedeemStatsOrErr() ([]*UserRedeemStat, error) {
 	return nil, &NotLoadedError{edge: "redeem_stats"}
 }
 
+// AnnouncementsOrErr returns the Announcements value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AnnouncementsOrErr() ([]*Announcement, error) {
+	if e.loadedTypes[10] {
+		return e.Announcements, nil
+	}
+	return nil, &NotLoadedError{edge: "announcements"}
+}
+
+// AnnouncementReadsOrErr returns the AnnouncementReads value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AnnouncementReadsOrErr() ([]*AnnouncementRead, error) {
+	if e.loadedTypes[11] {
+		return e.AnnouncementReads, nil
+	}
+	return nil, &NotLoadedError{edge: "announcement_reads"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[12] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -363,6 +385,16 @@ func (_m *User) QueryPaymentOrders() *PaymentOrderQuery {
 // QueryRedeemStats queries the "redeem_stats" edge of the User entity.
 func (_m *User) QueryRedeemStats() *UserRedeemStatQuery {
 	return NewUserClient(_m.config).QueryRedeemStats(_m)
+}
+
+// QueryAnnouncements queries the "announcements" edge of the User entity.
+func (_m *User) QueryAnnouncements() *AnnouncementQuery {
+	return NewUserClient(_m.config).QueryAnnouncements(_m)
+}
+
+// QueryAnnouncementReads queries the "announcement_reads" edge of the User entity.
+func (_m *User) QueryAnnouncementReads() *AnnouncementReadQuery {
+	return NewUserClient(_m.config).QueryAnnouncementReads(_m)
 }
 
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.

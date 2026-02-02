@@ -88,6 +88,8 @@ func (User) Edges() []ent.Edge {
 		edge.To("promo_code_usages", PromoCodeUsage.Type),
 		edge.To("payment_orders", PaymentOrder.Type),
 		edge.To("redeem_stats", UserRedeemStat.Type),
+		edge.To("announcements", Announcement.Type),
+		edge.To("announcement_reads", AnnouncementRead.Type),
 	}
 }
 

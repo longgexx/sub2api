@@ -1,16 +1,47 @@
 <script setup lang="ts">
 import { RouterView, useRouter, useRoute } from 'vue-router'
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, ref } from 'vue'
 import Toast from '@/components/common/Toast.vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
+import AnnouncementDialog from '@/components/common/AnnouncementDialog.vue'
 import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 import { getSetupStatus } from '@/api/setup'
+import { announcementAPI, type AnnouncementWithReadStatus } from '@/api'
 
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
+
+// Announcement state
+const showAnnouncementDialog = ref(false)
+const unreadAnnouncements = ref<AnnouncementWithReadStatus[]>([])
+
+// Check for unread announcements
+const checkUnreadAnnouncements = async () => {
+  try {
+    const announcements = await announcementAPI.getUnreadAnnouncements()
+    if (announcements.length > 0) {
+      unreadAnnouncements.value = announcements
+      showAnnouncementDialog.value = true
+    }
+  } catch (error: any) {
+    // Only log error, don't show to user as this is a background check
+    // 401 errors are expected when not authenticated
+    if (error?.response?.status !== 401) {
+      console.error('Failed to check announcements:', error)
+    }
+  }
+}
+
+const handleAnnouncementDialogClose = () => {
+  showAnnouncementDialog.value = false
+}
+
+const handleAnnouncementsUpdate = (updated: AnnouncementWithReadStatus[]) => {
+  unreadAnnouncements.value = updated
+}
 
 /**
  * Update favicon dynamically
@@ -59,6 +90,12 @@ watch(
         console.error('Failed to preload subscriptions:', error)
       })
       subscriptionStore.startPolling()
+
+      // Check for unread announcements on login or page refresh with existing session
+      // Use a small delay to ensure auth is fully initialized
+      setTimeout(() => {
+        checkUnreadAnnouncements()
+      }, 500)
     } else {
       // User logged out: clear data and stop polling
       subscriptionStore.clear()
@@ -88,4 +125,10 @@ onMounted(async () => {
   <NavigationProgress />
   <RouterView />
   <Toast />
+  <AnnouncementDialog
+    :show="showAnnouncementDialog"
+    :announcements="unreadAnnouncements"
+    @close="handleAnnouncementDialogClose"
+    @update:announcements="handleAnnouncementsUpdate"
+  />
 </template>

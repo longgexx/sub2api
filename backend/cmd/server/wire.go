@@ -80,6 +80,7 @@ func provideCleanup(
 	geminiOAuth *service.GeminiOAuthService,
 	antigravityOAuth *service.AntigravityOAuthService,
 	paymentMonitor *service.PaymentMonitorService,
+	announcementScheduler *service.AnnouncementSchedulerService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -90,6 +91,12 @@ func provideCleanup(
 			name string
 			fn   func() error
 		}{
+			{"AnnouncementSchedulerService", func() error {
+				if announcementScheduler != nil {
+					announcementScheduler.Stop()
+				}
+				return nil
+			}},
 			{"PaymentMonitorService", func() error {
 				if paymentMonitor != nil {
 					paymentMonitor.Stop()
