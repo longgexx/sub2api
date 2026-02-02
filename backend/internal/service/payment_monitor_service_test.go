@@ -12,7 +12,7 @@ import (
 
 // TestPaymentMonitorService_NewService 测试服务创建
 func TestPaymentMonitorService_NewService(t *testing.T) {
-	t.Run("默认间隔为5秒", func(t *testing.T) {
+	t.Run("默认间隔为20秒", func(t *testing.T) {
 		cfg := &config.Config{
 			Payment: config.PaymentConfig{
 				Monitor: config.PaymentMonitorConfig{
@@ -22,7 +22,7 @@ func TestPaymentMonitorService_NewService(t *testing.T) {
 		}
 
 		svc := NewPaymentMonitorService(nil, nil, cfg)
-		require.Equal(t, 5*time.Second, svc.activeInterval)
+		require.Equal(t, 20*time.Second, svc.activeInterval)
 	})
 
 	t.Run("自定义间隔", func(t *testing.T) {

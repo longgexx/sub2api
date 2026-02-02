@@ -1,23 +1,57 @@
 <template>
-  <BaseDialog
-    :show="show"
-    :title="$t('announcement.dialog.title')"
-    width="wide"
-    :close-on-escape="true"
-    :close-on-click-outside="false"
-    @close="handleClose"
-  >
-    <div class="announcement-dialog">
-      <!-- Empty state -->
-      <div v-if="announcements.length === 0" class="empty-state">
-        <Icon name="inbox" size="xl" class="text-gray-400 dark:text-dark-500" />
-        <p class="mt-2 text-gray-500 dark:text-dark-400">{{ $t('announcement.dialog.empty') }}</p>
+  <AppLayout>
+    <div class="announcements-page">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-title">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-dark-100">
+            {{ $t('announcement.page.title') }}
+          </h1>
+          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">
+            {{ $t('announcement.page.description') }}
+          </p>
+        </div>
+        <div class="header-actions">
+          <!-- Type Filter -->
+          <select
+            v-model="filterType"
+            class="filter-select"
+          >
+            <option value="all">{{ $t('announcement.page.filterAll') }}</option>
+            <option value="info">{{ $t('announcement.type.info') }}</option>
+            <option value="warning">{{ $t('announcement.type.warning') }}</option>
+            <option value="important">{{ $t('announcement.type.important') }}</option>
+          </select>
+          <!-- Mark All Read Button -->
+          <button
+            v-if="hasUnread"
+            class="btn btn-secondary"
+            :disabled="markingRead"
+            @click="handleMarkAllAsRead"
+          >
+            <Icon name="check" size="sm" />
+            {{ $t('announcement.dialog.markAllRead') }}
+          </button>
+        </div>
       </div>
 
-      <!-- Announcement list -->
+      <!-- Loading State -->
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <LoadingSpinner />
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="filteredAnnouncements.length === 0" class="empty-state">
+        <Icon name="inbox" size="xl" class="text-gray-400 dark:text-dark-500" />
+        <p class="mt-2 text-gray-500 dark:text-dark-400">
+          {{ $t('announcement.page.empty') }}
+        </p>
+      </div>
+
+      <!-- Announcement List -->
       <div v-else class="announcement-list">
         <div
-          v-for="announcement in announcements"
+          v-for="announcement in processedAnnouncements"
           :key="announcement.id"
           :class="[
             'announcement-item',
@@ -41,8 +75,8 @@
               <button
                 v-if="!announcement.is_read"
                 class="mark-read-btn"
+                :disabled="markingReadIds.has(announcement.id)"
                 @click="handleMarkAsRead(announcement.id)"
-                :disabled="markingRead"
               >
                 <Icon name="check" size="sm" />
                 {{ $t('announcement.dialog.markRead') }}
@@ -55,58 +89,59 @@
           </div>
 
           <!-- Content -->
-          <div class="announcement-content" v-html="formatContent(announcement.content)"></div>
+          <div class="announcement-content" v-html="announcement.sanitizedContent"></div>
         </div>
       </div>
     </div>
-
-    <template #footer>
-      <div class="dialog-footer">
-        <button
-          v-if="hasUnread"
-          class="btn btn-secondary"
-          @click="handleMarkAllAsRead"
-          :disabled="markingRead"
-        >
-          <Icon name="check" size="sm" />
-          {{ $t('announcement.dialog.markAllRead') }}
-        </button>
-        <button class="btn btn-primary" @click="handleClose">
-          {{ $t('common.close') }}
-        </button>
-      </div>
-    </template>
-  </BaseDialog>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DOMPurify from 'dompurify'
-import BaseDialog from '@/components/common/BaseDialog.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { announcementAPI, type AnnouncementWithReadStatus, type AnnouncementType } from '@/api'
 import { useAppStore } from '@/stores'
 
-interface Props {
-  show: boolean
-  announcements: AnnouncementWithReadStatus[]
-}
-
-interface Emits {
-  (e: 'close'): void
-  (e: 'update:announcements', announcements: AnnouncementWithReadStatus[]): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
-
 const { t } = useI18n()
 const appStore = useAppStore()
 
+const announcements = ref<AnnouncementWithReadStatus[]>([])
+const loading = ref(false)
 const markingRead = ref(false)
+const markingReadIds = ref<Set<number>>(new Set())
+const filterType = ref<'all' | AnnouncementType>('all')
 
-const hasUnread = computed(() => props.announcements.some((a) => !a.is_read))
+const filteredAnnouncements = computed(() => {
+  let result = announcements.value
+  if (filterType.value !== 'all') {
+    result = result.filter(a => a.type === filterType.value)
+  }
+  // 按优先级降序，然后按创建时间降序（带防御性处理）
+  return [...result].sort((a, b) => {
+    const pa = a.priority ?? 0
+    const pb = b.priority ?? 0
+    if (pb !== pa) {
+      return pb - pa
+    }
+    const ta = Date.parse(a.created_at) || 0
+    const tb = Date.parse(b.created_at) || 0
+    return tb - ta
+  })
+})
+
+// 预处理公告内容，避免每次渲染重复执行 sanitize
+const processedAnnouncements = computed(() => {
+  return filteredAnnouncements.value.map(a => ({
+    ...a,
+    sanitizedContent: formatContent(a.content)
+  }))
+})
+
+const hasUnread = computed(() => announcements.value.some(a => !a.is_read))
 
 const getTypeIcon = (type: AnnouncementType): 'infoCircle' | 'exclamationTriangle' | 'exclamationCircle' => {
   const icons: Record<AnnouncementType, 'infoCircle' | 'exclamationTriangle' | 'exclamationCircle'> = {
@@ -121,7 +156,6 @@ const formatDate = (dateStr: string): string => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return ''
-  // Use i18n locale for date formatting
   const locale = t('locale') === 'zh' ? 'zh-CN' : 'en-US'
   return date.toLocaleDateString(locale, {
     year: 'numeric',
@@ -134,7 +168,6 @@ const formatDate = (dateStr: string): string => {
 
 const formatContent = (content: string): string => {
   if (!content) return ''
-  // First escape HTML to prevent XSS
   let html = content
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -142,34 +175,41 @@ const formatContent = (content: string): string => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
 
-  // Then apply simple formatting
   html = html
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
 
-  // Sanitize with DOMPurify as an extra layer of protection
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['br', 'strong', 'em', 'code'],
     ALLOWED_ATTR: []
   })
 }
 
-const handleClose = () => {
-  emit('close')
+const loadAnnouncements = async () => {
+  loading.value = true
+  try {
+    announcements.value = await announcementAPI.getActiveAnnouncements()
+  } catch {
+    appStore.showError(t('announcement.page.loadError'))
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleMarkAsRead = async (id: number) => {
-  markingRead.value = true
+  markingReadIds.value.add(id)
   try {
     await announcementAPI.markAsRead(id)
-    const updated = props.announcements.map((a) => (a.id === id ? { ...a, is_read: true } : a))
-    emit('update:announcements', updated)
+    const idx = announcements.value.findIndex(a => a.id === id)
+    if (idx !== -1) {
+      announcements.value[idx] = { ...announcements.value[idx], is_read: true }
+    }
   } catch {
     appStore.showError(t('announcement.dialog.markReadError'))
   } finally {
-    markingRead.value = false
+    markingReadIds.value.delete(id)
   }
 }
 
@@ -177,8 +217,7 @@ const handleMarkAllAsRead = async () => {
   markingRead.value = true
   try {
     await announcementAPI.markAllAsRead()
-    const updated = props.announcements.map((a) => ({ ...a, is_read: true }))
-    emit('update:announcements', updated)
+    announcements.value = announcements.value.map(a => ({ ...a, is_read: true }))
     appStore.showSuccess(t('announcement.dialog.markAllReadSuccess'))
   } catch {
     appStore.showError(t('announcement.dialog.markAllReadError'))
@@ -186,12 +225,29 @@ const handleMarkAllAsRead = async () => {
     markingRead.value = false
   }
 }
+
+onMounted(() => {
+  loadAnnouncements()
+})
 </script>
 
 <style scoped>
-.announcement-dialog {
-  max-height: 60vh;
-  overflow-y: auto;
+.announcements-page {
+  @apply space-y-6;
+}
+
+.page-header {
+  @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.header-actions {
+  @apply flex flex-wrap items-center gap-3;
+}
+
+.filter-select {
+  @apply rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm;
+  @apply focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+  @apply dark:border-dark-600 dark:bg-dark-800 dark:text-dark-200;
 }
 
 .empty-state {
@@ -280,16 +336,8 @@ const handleMarkAllAsRead = async () => {
   @apply rounded bg-gray-100 px-1 py-0.5 font-mono text-xs dark:bg-dark-700;
 }
 
-.dialog-footer {
-  @apply flex justify-end gap-3;
-}
-
 .btn {
   @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors;
-}
-
-.btn-primary {
-  @apply bg-primary-600 text-white hover:bg-primary-700;
 }
 
 .btn-secondary {

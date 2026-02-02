@@ -201,7 +201,15 @@ export default {
       markAllRead: 'Mark all as read',
       markAllReadSuccess: 'All marked as read',
       markReadError: 'Failed to mark as read',
+      markAllReadError: 'Failed to mark all as read',
       read: 'Read'
+    },
+    page: {
+      title: 'Announcements',
+      description: 'View system announcements and notifications',
+      empty: 'No announcements',
+      filterAll: 'All types',
+      loadError: 'Failed to load announcements'
     }
   },
 
@@ -222,6 +230,7 @@ export default {
     ops: 'Ops',
     promoCodes: 'Promo Codes',
     announcements: 'Announcements',
+    userAnnouncements: 'Notices',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',

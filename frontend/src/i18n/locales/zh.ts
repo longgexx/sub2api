@@ -198,7 +198,15 @@ export default {
       markAllRead: '全部已读',
       markAllReadSuccess: '已全部标记为已读',
       markReadError: '标记已读失败',
+      markAllReadError: '标记全部已读失败',
       read: '已读'
+    },
+    page: {
+      title: '系统公告',
+      description: '查看系统公告和通知',
+      empty: '暂无公告',
+      filterAll: '全部类型',
+      loadError: '加载公告失败'
     }
   },
 
@@ -211,6 +219,7 @@ export default {
     topup: '充值',
     paymentOrders: '支付订单',
     announcements: '公告管理',
+    userAnnouncements: '公告',
     profile: '个人资料',
     users: '用户管理',
     groups: '分组管理',
