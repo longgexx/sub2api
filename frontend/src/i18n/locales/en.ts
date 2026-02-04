@@ -228,6 +228,7 @@ export default {
     redeemCodes: 'Redeem Codes',
     redeemRules: 'Redeem Rules',
     ops: 'Ops',
+    opsView: 'Ops View',
     promoCodes: 'Promo Codes',
     announcements: 'Announcements',
     userAnnouncements: 'Notices',
@@ -3135,6 +3136,78 @@ export default {
         downloadChart: 'Download',
         downloadChartHint: 'Download chart as image'
       }
+    },
+
+    // Operations View
+    opsView: {
+      title: 'Operations View',
+      description: 'Business metrics and operational analytics',
+      loadError: 'Failed to load operations data',
+      // KPI Cards
+      kpi: {
+        totalBalance: 'Total Balance',
+        consumption: 'Consumption',
+        recharge: 'Recharge',
+        paymentRecharge: 'Payment',
+        redeemRecharge: 'Redeem',
+        payment: 'Payment',
+        redeem: 'Redeem',
+        users: 'User Metrics',
+        userMetrics: 'User Metrics',
+        activeUsers: 'Active Users',
+        newUsers: 'New Users',
+        payingUsers: 'Paying Users',
+        retention: 'Retention',
+        today: 'Today',
+        week: 'This Week',
+        month: 'This Month',
+        totalUsers: 'Total Users',
+        todayConsumption: 'Today Consumption',
+        todayRecharge: 'Today Recharge',
+        todayActiveUsers: 'Today Active',
+        todayNewUsers: 'Today New',
+        weekActiveUsers: 'Week Active',
+        weekNewUsers: 'Week New',
+        weekPayingUsers: 'Week Paying',
+        weekRetention: 'Week Retention',
+        monthActiveUsers: 'Month Active',
+        monthNewUsers: 'Month New'
+      },
+      // Trend Chart
+      trend: {
+        title: 'Consumption & Recharge Trend',
+        consumption: 'Consumption',
+        paymentRecharge: 'Payment',
+        redeemRecharge: 'Redeem',
+        totalRecharge: 'Total Recharge',
+        empty: 'No trend data available'
+      },
+      // User Growth Chart
+      userGrowth: {
+        title: 'User Growth',
+        newUsers: 'New Users',
+        activeUsers: 'Active Users',
+        payingUsers: 'Paying Users',
+        retentionD1: 'D1 Retention',
+        retentionD7: 'D7 Retention',
+        retentionD30: 'D30 Retention',
+        empty: 'No user growth data available'
+      },
+      // Top Users Table
+      topUsers: {
+        title: 'Top Users',
+        rank: 'Rank',
+        user: 'User',
+        consumption: 'Consumption',
+        requests: 'Requests',
+        avgCost: 'Avg Cost',
+        lastActive: 'Last Active',
+        registered: 'Registered',
+        empty: 'No top users data available'
+      },
+      // Common
+      noData: 'No data available',
+      loading: 'Loading...'
     },
 
     // Settings

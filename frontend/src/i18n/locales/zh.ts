@@ -229,6 +229,7 @@ export default {
     redeemCodes: '兑换码',
     redeemRules: '兑换规则',
     ops: '运维监控',
+    opsView: '运营视图',
     promoCodes: '优惠码',
     settings: '系统设置',
     myAccount: '我的账户',
@@ -3288,6 +3289,78 @@ export default {
         downloadChart: '下载',
         downloadChartHint: '下载图表图片'
       }
+    },
+
+    // Operations View (运营视图)
+    opsView: {
+      title: '运营视图',
+      description: '业务指标与运营数据分析',
+      loadError: '加载运营数据失败',
+      // KPI Cards
+      kpi: {
+        totalBalance: '总余额',
+        consumption: '消耗金额',
+        recharge: '充值金额',
+        paymentRecharge: '平台充值',
+        redeemRecharge: '兑换充值',
+        payment: '平台充值',
+        redeem: '兑换充值',
+        users: '用户指标',
+        userMetrics: '用户指标',
+        activeUsers: '活跃用户',
+        newUsers: '新增用户',
+        payingUsers: '付费用户',
+        retention: '留存率',
+        today: '今日',
+        week: '本周',
+        month: '本月',
+        totalUsers: '总用户',
+        todayConsumption: '今日消耗',
+        todayRecharge: '今日充值',
+        todayActiveUsers: '今日活跃',
+        todayNewUsers: '今日新增',
+        weekActiveUsers: '本周活跃',
+        weekNewUsers: '本周新增',
+        weekPayingUsers: '本周付费',
+        weekRetention: '本周留存',
+        monthActiveUsers: '本月活跃',
+        monthNewUsers: '本月新增'
+      },
+      // Trend Chart
+      trend: {
+        title: '消耗与充值趋势',
+        consumption: '消耗',
+        paymentRecharge: '平台充值',
+        redeemRecharge: '兑换充值',
+        totalRecharge: '总充值',
+        empty: '暂无趋势数据'
+      },
+      // User Growth Chart
+      userGrowth: {
+        title: '用户增长',
+        newUsers: '新增用户',
+        activeUsers: '活跃用户',
+        payingUsers: '付费用户',
+        retentionD1: '次日留存',
+        retentionD7: '7日留存',
+        retentionD30: '30日留存',
+        empty: '暂无用户增长数据'
+      },
+      // Top Users Table
+      topUsers: {
+        title: '高价值用户',
+        rank: '排名',
+        user: '用户',
+        consumption: '消耗',
+        requests: '请求数',
+        avgCost: '平均消耗',
+        lastActive: '最后活跃',
+        registered: '注册时间',
+        empty: '暂无高价值用户数据'
+      },
+      // Common
+      noData: '暂无数据',
+      loading: '加载中...'
     },
 
     // Settings

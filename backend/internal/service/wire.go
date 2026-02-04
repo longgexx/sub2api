@@ -385,6 +385,7 @@ var ProviderSet = wire.NewSet(
 	NewAccountTestService,
 	NewSettingService,
 	NewOpsService,
+	NewOpsViewService,
 	ProvideOpsMetricsCollector,
 	ProvideOpsAggregationService,
 	ProvideOpsAlertEvaluatorService,

@@ -44,11 +44,14 @@ apiClient.interceptors.request.use(
     }
 
     // Attach timezone for all GET requests (backend may use it for default date ranges)
+    // Only set default timezone if not explicitly provided in params
     if (config.method === 'get') {
       if (!config.params) {
         config.params = {}
       }
-      config.params.timezone = getUserTimezone()
+      if (!config.params.timezone) {
+        config.params.timezone = getUserTimezone()
+      }
     }
 
     return config

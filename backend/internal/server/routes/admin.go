@@ -56,6 +56,9 @@ func RegisterAdminRoutes(
 		// 运维监控（Ops）
 		registerOpsRoutes(admin, h)
 
+		// 运营视图（Ops View）
+		registerOpsViewRoutes(admin, h)
+
 		// 系统管理
 		registerSystemRoutes(admin, h)
 
@@ -420,5 +423,27 @@ func registerAnnouncementRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		announcements.DELETE("/:id", h.Admin.Announcement.Delete)
 		announcements.POST("/:id/publish", h.Admin.Announcement.Publish)
 		announcements.POST("/:id/archive", h.Admin.Announcement.Archive)
+	}
+}
+
+func registerOpsViewRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	opsView := admin.Group("/ops-view")
+	{
+		// 运营概览
+		opsView.GET("/overview", h.Admin.OpsView.GetOverview)
+		// 今日 vs 昨日对比
+		opsView.GET("/comparison", h.Admin.OpsView.GetComparison)
+		// 趋势数据
+		opsView.GET("/trend", h.Admin.OpsView.GetTrend)
+		// 用户增长
+		opsView.GET("/users/growth", h.Admin.OpsView.GetUserGrowth)
+		// 高价值用户
+		opsView.GET("/users/top", h.Admin.OpsView.GetTopUsers)
+		// 分组消耗
+		opsView.GET("/groups/consumption", h.Admin.OpsView.GetGroupConsumption)
+		// 模型排行
+		opsView.GET("/models/ranking", h.Admin.OpsView.GetModelRanking)
+		// 活跃热力图
+		opsView.GET("/activity/heatmap", h.Admin.OpsView.GetActivityHeatmap)
 	}
 }

@@ -242,6 +242,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/ops-view',
+    name: 'AdminOpsView',
+    component: () => import('@/views/admin/ops-view/OpsViewDashboard.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Operations View',
+      titleKey: 'admin.opsView.title',
+      descriptionKey: 'admin.opsView.description'
+    }
+  },
+  {
     path: '/admin/users',
     name: 'AdminUsers',
     component: () => import('@/views/admin/UsersView.vue'),
