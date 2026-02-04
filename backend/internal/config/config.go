@@ -960,7 +960,7 @@ func setDefaults() {
 	viper.SetDefault("payment.monitor.max_amount", 10000.0)
 
 	// AccountHealthCheck API Key 账号健康检测
-	viper.SetDefault("account_health_check.enabled", false)
+	viper.SetDefault("account_health_check.enabled", true)
 	viper.SetDefault("account_health_check.check_interval_seconds", 10)
 	viper.SetDefault("account_health_check.max_concurrency", 5)
 
