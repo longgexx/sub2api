@@ -81,6 +81,7 @@ func provideCleanup(
 	antigravityOAuth *service.AntigravityOAuthService,
 	paymentMonitor *service.PaymentMonitorService,
 	announcementScheduler *service.AnnouncementSchedulerService,
+	accountHealthCheck *service.AccountHealthCheckService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -94,6 +95,12 @@ func provideCleanup(
 			{"AnnouncementSchedulerService", func() error {
 				if announcementScheduler != nil {
 					announcementScheduler.Stop()
+				}
+				return nil
+			}},
+			{"AccountHealthCheckService", func() error {
+				if accountHealthCheck != nil {
+					accountHealthCheck.Stop()
 				}
 				return nil
 			}},

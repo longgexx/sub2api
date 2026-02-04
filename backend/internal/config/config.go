@@ -38,32 +38,33 @@ const (
 )
 
 type Config struct {
-	Server       ServerConfig               `mapstructure:"server"`
-	CORS         CORSConfig                 `mapstructure:"cors"`
-	Security     SecurityConfig             `mapstructure:"security"`
-	Billing      BillingConfig              `mapstructure:"billing"`
-	Turnstile    TurnstileConfig            `mapstructure:"turnstile"`
-	Database     DatabaseConfig             `mapstructure:"database"`
-	Redis        RedisConfig                `mapstructure:"redis"`
-	Ops          OpsConfig                  `mapstructure:"ops"`
-	JWT          JWTConfig                  `mapstructure:"jwt"`
-	Totp         TotpConfig                 `mapstructure:"totp"`
-	LinuxDo      LinuxDoConnectConfig       `mapstructure:"linuxdo_connect"`
-	Default      DefaultConfig              `mapstructure:"default"`
-	RateLimit    RateLimitConfig            `mapstructure:"rate_limit"`
-	Pricing      PricingConfig              `mapstructure:"pricing"`
-	Gateway      GatewayConfig              `mapstructure:"gateway"`
-	APIKeyAuth   APIKeyAuthCacheConfig      `mapstructure:"api_key_auth_cache"`
-	Dashboard    DashboardCacheConfig       `mapstructure:"dashboard_cache"`
-	DashboardAgg DashboardAggregationConfig `mapstructure:"dashboard_aggregation"`
-	UsageCleanup UsageCleanupConfig         `mapstructure:"usage_cleanup"`
-	Concurrency  ConcurrencyConfig          `mapstructure:"concurrency"`
-	TokenRefresh TokenRefreshConfig         `mapstructure:"token_refresh"`
-	Payment      PaymentConfig              `mapstructure:"payment"`
-	RunMode      string                     `mapstructure:"run_mode" yaml:"run_mode"`
-	Timezone     string                     `mapstructure:"timezone"` // e.g. "Asia/Shanghai", "UTC"
-	Gemini       GeminiConfig               `mapstructure:"gemini"`
-	Update       UpdateConfig               `mapstructure:"update"`
+	Server             ServerConfig               `mapstructure:"server"`
+	CORS               CORSConfig                 `mapstructure:"cors"`
+	Security           SecurityConfig             `mapstructure:"security"`
+	Billing            BillingConfig              `mapstructure:"billing"`
+	Turnstile          TurnstileConfig            `mapstructure:"turnstile"`
+	Database           DatabaseConfig             `mapstructure:"database"`
+	Redis              RedisConfig                `mapstructure:"redis"`
+	Ops                OpsConfig                  `mapstructure:"ops"`
+	JWT                JWTConfig                  `mapstructure:"jwt"`
+	Totp               TotpConfig                 `mapstructure:"totp"`
+	LinuxDo            LinuxDoConnectConfig       `mapstructure:"linuxdo_connect"`
+	Default            DefaultConfig              `mapstructure:"default"`
+	RateLimit          RateLimitConfig            `mapstructure:"rate_limit"`
+	Pricing            PricingConfig              `mapstructure:"pricing"`
+	Gateway            GatewayConfig              `mapstructure:"gateway"`
+	APIKeyAuth         APIKeyAuthCacheConfig      `mapstructure:"api_key_auth_cache"`
+	Dashboard          DashboardCacheConfig       `mapstructure:"dashboard_cache"`
+	DashboardAgg       DashboardAggregationConfig `mapstructure:"dashboard_aggregation"`
+	UsageCleanup       UsageCleanupConfig         `mapstructure:"usage_cleanup"`
+	Concurrency        ConcurrencyConfig          `mapstructure:"concurrency"`
+	TokenRefresh       TokenRefreshConfig         `mapstructure:"token_refresh"`
+	Payment            PaymentConfig              `mapstructure:"payment"`
+	AccountHealthCheck AccountHealthCheckConfig   `mapstructure:"account_health_check"`
+	RunMode            string                     `mapstructure:"run_mode" yaml:"run_mode"`
+	Timezone           string                     `mapstructure:"timezone"` // e.g. "Asia/Shanghai", "UTC"
+	Gemini             GeminiConfig               `mapstructure:"gemini"`
+	Update             UpdateConfig               `mapstructure:"update"`
 }
 
 type GeminiConfig struct {
@@ -600,6 +601,16 @@ type PaymentMonitorConfig struct {
 	MaxAmount float64 `mapstructure:"max_amount"`
 }
 
+// AccountHealthCheckConfig API Key 账号健康检测配置
+type AccountHealthCheckConfig struct {
+	// Enabled: 是否启用健康检测
+	Enabled bool `mapstructure:"enabled"`
+	// CheckIntervalSeconds: 检测间隔（秒）
+	CheckIntervalSeconds int `mapstructure:"check_interval_seconds"`
+	// MaxConcurrency: 最大并发检测数
+	MaxConcurrency int `mapstructure:"max_concurrency"`
+}
+
 func NormalizeRunMode(value string) string {
 	normalized := strings.ToLower(strings.TrimSpace(value))
 	switch normalized {
@@ -947,6 +958,11 @@ func setDefaults() {
 	viper.SetDefault("payment.monitor.business_qr_code", "")
 	viper.SetDefault("payment.monitor.min_amount", 1.0)
 	viper.SetDefault("payment.monitor.max_amount", 10000.0)
+
+	// AccountHealthCheck API Key 账号健康检测
+	viper.SetDefault("account_health_check.enabled", false)
+	viper.SetDefault("account_health_check.check_interval_seconds", 10)
+	viper.SetDefault("account_health_check.max_concurrency", 5)
 
 	// Gemini OAuth - configure via environment variables or config file
 	// GEMINI_OAUTH_CLIENT_ID and GEMINI_OAUTH_CLIENT_SECRET

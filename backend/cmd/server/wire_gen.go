@@ -178,7 +178,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	paymentHandler := admin.NewPaymentHandler(paymentService, paymentMonitorService)
 	announcementRepository := repository.NewAnnouncementRepository(client)
 	announcementService := service.NewAnnouncementService(announcementRepository)
-	announcementSchedulerService := service.ProvideAnnouncementSchedulerService(announcementRepository)
 	announcementHandler := admin.NewAnnouncementHandler(announcementService)
 	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, oAuthHandler, openAIOAuthHandler, geminiOAuthHandler, antigravityOAuthHandler, proxyHandler, adminRedeemHandler, redeemRuleHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, paymentHandler, announcementHandler)
 	gatewayHandler := handler.NewGatewayHandler(gatewayService, geminiMessagesCompatService, antigravityGatewayService, userService, concurrencyService, billingCacheService, configConfig)
@@ -201,7 +200,9 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	tokenRefreshService := service.ProvideTokenRefreshService(accountRepository, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, compositeTokenCacheInvalidator, schedulerCache, configConfig)
 	accountExpiryService := service.ProvideAccountExpiryService(accountRepository)
 	subscriptionExpiryService := service.ProvideSubscriptionExpiryService(userSubscriptionRepository)
-	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, pricingService, emailQueueService, billingCacheService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, paymentMonitorService, announcementSchedulerService)
+	announcementSchedulerService := service.ProvideAnnouncementSchedulerService(announcementRepository)
+	accountHealthCheckService := service.ProvideAccountHealthCheckService(accountRepository, httpUpstream, configConfig)
+	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, pricingService, emailQueueService, billingCacheService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, paymentMonitorService, announcementSchedulerService, accountHealthCheckService)
 	application := &Application{
 		Server:  httpServer,
 		Cleanup: v,
@@ -245,6 +246,7 @@ func provideCleanup(
 	antigravityOAuth *service.AntigravityOAuthService,
 	paymentMonitor *service.PaymentMonitorService,
 	announcementScheduler *service.AnnouncementSchedulerService,
+	accountHealthCheck *service.AccountHealthCheckService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -257,6 +259,12 @@ func provideCleanup(
 			{"AnnouncementSchedulerService", func() error {
 				if announcementScheduler != nil {
 					announcementScheduler.Stop()
+				}
+				return nil
+			}},
+			{"AccountHealthCheckService", func() error {
+				if accountHealthCheck != nil {
+					accountHealthCheck.Stop()
 				}
 				return nil
 			}},

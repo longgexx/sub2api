@@ -3001,6 +3001,16 @@ func (s *GatewayService) handleErrorResponse(ctx context.Context, resp *http.Res
 			return nil, fmt.Errorf("upstream error: %d", resp.StatusCode)
 		}
 		return nil, fmt.Errorf("upstream error: %d message=%s", resp.StatusCode, summary)
+	case 422:
+		c.Data(http.StatusUnprocessableEntity, "application/json", body)
+		summary := upstreamMsg
+		if summary == "" {
+			summary = truncateForLog(body, 512)
+		}
+		if summary == "" {
+			return nil, fmt.Errorf("upstream error: %d", resp.StatusCode)
+		}
+		return nil, fmt.Errorf("upstream error: %d message=%s", resp.StatusCode, summary)
 	case 401:
 		statusCode = http.StatusBadGateway
 		errType = "upstream_error"

@@ -590,12 +590,28 @@ func (r *accountRepository) syncSchedulerAccountSnapshot(ctx context.Context, ac
 }
 
 func (r *accountRepository) ClearError(ctx context.Context, id int64) error {
-	_, err := r.client.Account.Update().
-		Where(dbaccount.IDEQ(id)).
+	// 只有当账号仍处于 error 状态时才清除，避免覆盖人为/并发变更
+	affected, err := r.client.Account.Update().
+		Where(
+			dbaccount.IDEQ(id),
+			dbaccount.StatusEQ(service.StatusError),
+		).
 		SetStatus(service.StatusActive).
 		SetErrorMessage("").
 		Save(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+	// 如果没有更新任何行，说明状态已被其他操作修改，跳过缓存同步
+	if affected == 0 {
+		return nil
+	}
+	// 同步调度器缓存，确保账号恢复后能立即被调度
+	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &id, nil, nil); err != nil {
+		log.Printf("[SchedulerOutbox] enqueue clear error failed: account=%d err=%v", id, err)
+	}
+	r.syncSchedulerAccountSnapshot(ctx, id)
+	return nil
 }
 
 func (r *accountRepository) AddToGroup(ctx context.Context, accountID, groupID int64, priority int) error {

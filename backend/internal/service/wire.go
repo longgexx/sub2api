@@ -335,6 +335,17 @@ func ProvideAnnouncementSchedulerService(announcementRepo AnnouncementRepository
 	return svc
 }
 
+// ProvideAccountHealthCheckService 创建并启动账号健康检测服务
+func ProvideAccountHealthCheckService(
+	accountRepo AccountRepository,
+	httpUpstream HTTPUpstream,
+	cfg *config.Config,
+) *AccountHealthCheckService {
+	svc := NewAccountHealthCheckService(accountRepo, httpUpstream, cfg)
+	svc.Start()
+	return svc
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
@@ -404,4 +415,5 @@ var ProviderSet = wire.NewSet(
 	ProvidePaymentMonitorService,
 	NewAnnouncementService,
 	ProvideAnnouncementSchedulerService,
+	ProvideAccountHealthCheckService,
 )
