@@ -37,6 +37,7 @@ const colors = computed(() => ({
   redeem: '#f59e0b',
   redeemAlpha: '#f59e0b20',
   totalRecharge: '#8b5cf6',
+  totalBalance: '#ec4899',
   grid: isDarkMode.value ? '#374151' : '#f3f4f6',
   text: isDarkMode.value ? '#9ca3af' : '#6b7280'
 }))
@@ -95,6 +96,17 @@ const chartData = computed(() => {
         pointRadius: 0,
         pointHitRadius: 10,
         borderDash: [5, 5]
+      },
+      {
+        label: t('admin.opsView.trend.totalBalance'),
+        data: props.trend.map((p) => p.total_balance),
+        borderColor: c.totalBalance,
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHitRadius: 10,
+        yAxisID: 'y1'
       }
     ]
   }
@@ -147,6 +159,17 @@ const options = computed(() => {
         grid: { color: c.grid, borderDash: [4, 4] },
         ticks: {
           color: c.text,
+          font: { size: 10 },
+          callback: (value: string | number) => `$${value}`
+        }
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        grid: { display: false },
+        ticks: {
+          color: c.totalBalance,
           font: { size: 10 },
           callback: (value: string | number) => `$${value}`
         }

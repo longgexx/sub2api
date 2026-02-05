@@ -317,6 +317,27 @@ var (
 			},
 		},
 	}
+	// BalanceSnapshotsDailyColumns holds the columns for the "balance_snapshots_daily" table.
+	BalanceSnapshotsDailyColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "snapshot_date", Type: field.TypeTime, Unique: true, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "total_balance", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "user_count", Type: field.TypeInt64, Default: 0},
+		{Name: "computed_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// BalanceSnapshotsDailyTable holds the schema information for the "balance_snapshots_daily" table.
+	BalanceSnapshotsDailyTable = &schema.Table{
+		Name:       "balance_snapshots_daily",
+		Columns:    BalanceSnapshotsDailyColumns,
+		PrimaryKey: []*schema.Column{BalanceSnapshotsDailyColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "balancesnapshotdaily_snapshot_date",
+				Unique:  false,
+				Columns: []*schema.Column{BalanceSnapshotsDailyColumns[1]},
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1077,6 +1098,7 @@ var (
 		AccountGroupsTable,
 		AnnouncementsTable,
 		AnnouncementReadsTable,
+		BalanceSnapshotsDailyTable,
 		GroupsTable,
 		PaymentOrdersTable,
 		PromoCodesTable,
@@ -1119,6 +1141,9 @@ func init() {
 	AnnouncementReadsTable.ForeignKeys[1].RefTable = UsersTable
 	AnnouncementReadsTable.Annotation = &entsql.Annotation{
 		Table: "announcement_reads",
+	}
+	BalanceSnapshotsDailyTable.Annotation = &entsql.Annotation{
+		Table: "balance_snapshots_daily",
 	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",

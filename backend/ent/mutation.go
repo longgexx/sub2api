@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/balancesnapshotdaily"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
@@ -51,6 +52,7 @@ const (
 	TypeAccountGroup            = "AccountGroup"
 	TypeAnnouncement            = "Announcement"
 	TypeAnnouncementRead        = "AnnouncementRead"
+	TypeBalanceSnapshotDaily    = "BalanceSnapshotDaily"
 	TypeGroup                   = "Group"
 	TypePaymentOrder            = "PaymentOrder"
 	TypePromoCode               = "PromoCode"
@@ -5710,6 +5712,563 @@ func (m *AnnouncementReadMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown AnnouncementRead edge %s", name)
+}
+
+// BalanceSnapshotDailyMutation represents an operation that mutates the BalanceSnapshotDaily nodes in the graph.
+type BalanceSnapshotDailyMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int64
+	snapshot_date    *time.Time
+	total_balance    *float64
+	addtotal_balance *float64
+	user_count       *int64
+	adduser_count    *int64
+	computed_at      *time.Time
+	clearedFields    map[string]struct{}
+	done             bool
+	oldValue         func(context.Context) (*BalanceSnapshotDaily, error)
+	predicates       []predicate.BalanceSnapshotDaily
+}
+
+var _ ent.Mutation = (*BalanceSnapshotDailyMutation)(nil)
+
+// balancesnapshotdailyOption allows management of the mutation configuration using functional options.
+type balancesnapshotdailyOption func(*BalanceSnapshotDailyMutation)
+
+// newBalanceSnapshotDailyMutation creates new mutation for the BalanceSnapshotDaily entity.
+func newBalanceSnapshotDailyMutation(c config, op Op, opts ...balancesnapshotdailyOption) *BalanceSnapshotDailyMutation {
+	m := &BalanceSnapshotDailyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBalanceSnapshotDaily,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBalanceSnapshotDailyID sets the ID field of the mutation.
+func withBalanceSnapshotDailyID(id int64) balancesnapshotdailyOption {
+	return func(m *BalanceSnapshotDailyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BalanceSnapshotDaily
+		)
+		m.oldValue = func(ctx context.Context) (*BalanceSnapshotDaily, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BalanceSnapshotDaily.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBalanceSnapshotDaily sets the old BalanceSnapshotDaily of the mutation.
+func withBalanceSnapshotDaily(node *BalanceSnapshotDaily) balancesnapshotdailyOption {
+	return func(m *BalanceSnapshotDailyMutation) {
+		m.oldValue = func(context.Context) (*BalanceSnapshotDaily, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BalanceSnapshotDailyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BalanceSnapshotDailyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BalanceSnapshotDailyMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BalanceSnapshotDailyMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BalanceSnapshotDaily.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetSnapshotDate sets the "snapshot_date" field.
+func (m *BalanceSnapshotDailyMutation) SetSnapshotDate(t time.Time) {
+	m.snapshot_date = &t
+}
+
+// SnapshotDate returns the value of the "snapshot_date" field in the mutation.
+func (m *BalanceSnapshotDailyMutation) SnapshotDate() (r time.Time, exists bool) {
+	v := m.snapshot_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotDate returns the old "snapshot_date" field's value of the BalanceSnapshotDaily entity.
+// If the BalanceSnapshotDaily object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BalanceSnapshotDailyMutation) OldSnapshotDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotDate: %w", err)
+	}
+	return oldValue.SnapshotDate, nil
+}
+
+// ResetSnapshotDate resets all changes to the "snapshot_date" field.
+func (m *BalanceSnapshotDailyMutation) ResetSnapshotDate() {
+	m.snapshot_date = nil
+}
+
+// SetTotalBalance sets the "total_balance" field.
+func (m *BalanceSnapshotDailyMutation) SetTotalBalance(f float64) {
+	m.total_balance = &f
+	m.addtotal_balance = nil
+}
+
+// TotalBalance returns the value of the "total_balance" field in the mutation.
+func (m *BalanceSnapshotDailyMutation) TotalBalance() (r float64, exists bool) {
+	v := m.total_balance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalBalance returns the old "total_balance" field's value of the BalanceSnapshotDaily entity.
+// If the BalanceSnapshotDaily object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BalanceSnapshotDailyMutation) OldTotalBalance(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalBalance is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalBalance requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalBalance: %w", err)
+	}
+	return oldValue.TotalBalance, nil
+}
+
+// AddTotalBalance adds f to the "total_balance" field.
+func (m *BalanceSnapshotDailyMutation) AddTotalBalance(f float64) {
+	if m.addtotal_balance != nil {
+		*m.addtotal_balance += f
+	} else {
+		m.addtotal_balance = &f
+	}
+}
+
+// AddedTotalBalance returns the value that was added to the "total_balance" field in this mutation.
+func (m *BalanceSnapshotDailyMutation) AddedTotalBalance() (r float64, exists bool) {
+	v := m.addtotal_balance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalBalance resets all changes to the "total_balance" field.
+func (m *BalanceSnapshotDailyMutation) ResetTotalBalance() {
+	m.total_balance = nil
+	m.addtotal_balance = nil
+}
+
+// SetUserCount sets the "user_count" field.
+func (m *BalanceSnapshotDailyMutation) SetUserCount(i int64) {
+	m.user_count = &i
+	m.adduser_count = nil
+}
+
+// UserCount returns the value of the "user_count" field in the mutation.
+func (m *BalanceSnapshotDailyMutation) UserCount() (r int64, exists bool) {
+	v := m.user_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserCount returns the old "user_count" field's value of the BalanceSnapshotDaily entity.
+// If the BalanceSnapshotDaily object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BalanceSnapshotDailyMutation) OldUserCount(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserCount: %w", err)
+	}
+	return oldValue.UserCount, nil
+}
+
+// AddUserCount adds i to the "user_count" field.
+func (m *BalanceSnapshotDailyMutation) AddUserCount(i int64) {
+	if m.adduser_count != nil {
+		*m.adduser_count += i
+	} else {
+		m.adduser_count = &i
+	}
+}
+
+// AddedUserCount returns the value that was added to the "user_count" field in this mutation.
+func (m *BalanceSnapshotDailyMutation) AddedUserCount() (r int64, exists bool) {
+	v := m.adduser_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserCount resets all changes to the "user_count" field.
+func (m *BalanceSnapshotDailyMutation) ResetUserCount() {
+	m.user_count = nil
+	m.adduser_count = nil
+}
+
+// SetComputedAt sets the "computed_at" field.
+func (m *BalanceSnapshotDailyMutation) SetComputedAt(t time.Time) {
+	m.computed_at = &t
+}
+
+// ComputedAt returns the value of the "computed_at" field in the mutation.
+func (m *BalanceSnapshotDailyMutation) ComputedAt() (r time.Time, exists bool) {
+	v := m.computed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComputedAt returns the old "computed_at" field's value of the BalanceSnapshotDaily entity.
+// If the BalanceSnapshotDaily object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BalanceSnapshotDailyMutation) OldComputedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComputedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComputedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComputedAt: %w", err)
+	}
+	return oldValue.ComputedAt, nil
+}
+
+// ResetComputedAt resets all changes to the "computed_at" field.
+func (m *BalanceSnapshotDailyMutation) ResetComputedAt() {
+	m.computed_at = nil
+}
+
+// Where appends a list predicates to the BalanceSnapshotDailyMutation builder.
+func (m *BalanceSnapshotDailyMutation) Where(ps ...predicate.BalanceSnapshotDaily) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BalanceSnapshotDailyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BalanceSnapshotDailyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BalanceSnapshotDaily, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BalanceSnapshotDailyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BalanceSnapshotDailyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BalanceSnapshotDaily).
+func (m *BalanceSnapshotDailyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BalanceSnapshotDailyMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.snapshot_date != nil {
+		fields = append(fields, balancesnapshotdaily.FieldSnapshotDate)
+	}
+	if m.total_balance != nil {
+		fields = append(fields, balancesnapshotdaily.FieldTotalBalance)
+	}
+	if m.user_count != nil {
+		fields = append(fields, balancesnapshotdaily.FieldUserCount)
+	}
+	if m.computed_at != nil {
+		fields = append(fields, balancesnapshotdaily.FieldComputedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BalanceSnapshotDailyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case balancesnapshotdaily.FieldSnapshotDate:
+		return m.SnapshotDate()
+	case balancesnapshotdaily.FieldTotalBalance:
+		return m.TotalBalance()
+	case balancesnapshotdaily.FieldUserCount:
+		return m.UserCount()
+	case balancesnapshotdaily.FieldComputedAt:
+		return m.ComputedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BalanceSnapshotDailyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case balancesnapshotdaily.FieldSnapshotDate:
+		return m.OldSnapshotDate(ctx)
+	case balancesnapshotdaily.FieldTotalBalance:
+		return m.OldTotalBalance(ctx)
+	case balancesnapshotdaily.FieldUserCount:
+		return m.OldUserCount(ctx)
+	case balancesnapshotdaily.FieldComputedAt:
+		return m.OldComputedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BalanceSnapshotDaily field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BalanceSnapshotDailyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case balancesnapshotdaily.FieldSnapshotDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotDate(v)
+		return nil
+	case balancesnapshotdaily.FieldTotalBalance:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalBalance(v)
+		return nil
+	case balancesnapshotdaily.FieldUserCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserCount(v)
+		return nil
+	case balancesnapshotdaily.FieldComputedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComputedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BalanceSnapshotDaily field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BalanceSnapshotDailyMutation) AddedFields() []string {
+	var fields []string
+	if m.addtotal_balance != nil {
+		fields = append(fields, balancesnapshotdaily.FieldTotalBalance)
+	}
+	if m.adduser_count != nil {
+		fields = append(fields, balancesnapshotdaily.FieldUserCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BalanceSnapshotDailyMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case balancesnapshotdaily.FieldTotalBalance:
+		return m.AddedTotalBalance()
+	case balancesnapshotdaily.FieldUserCount:
+		return m.AddedUserCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BalanceSnapshotDailyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case balancesnapshotdaily.FieldTotalBalance:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalBalance(v)
+		return nil
+	case balancesnapshotdaily.FieldUserCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BalanceSnapshotDaily numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BalanceSnapshotDailyMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BalanceSnapshotDailyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BalanceSnapshotDailyMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown BalanceSnapshotDaily nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BalanceSnapshotDailyMutation) ResetField(name string) error {
+	switch name {
+	case balancesnapshotdaily.FieldSnapshotDate:
+		m.ResetSnapshotDate()
+		return nil
+	case balancesnapshotdaily.FieldTotalBalance:
+		m.ResetTotalBalance()
+		return nil
+	case balancesnapshotdaily.FieldUserCount:
+		m.ResetUserCount()
+		return nil
+	case balancesnapshotdaily.FieldComputedAt:
+		m.ResetComputedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BalanceSnapshotDaily field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BalanceSnapshotDailyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BalanceSnapshotDailyMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BalanceSnapshotDailyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BalanceSnapshotDailyMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BalanceSnapshotDailyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BalanceSnapshotDailyMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BalanceSnapshotDailyMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BalanceSnapshotDaily unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BalanceSnapshotDailyMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BalanceSnapshotDaily edge %s", name)
 }
 
 // GroupMutation represents an operation that mutates the Group nodes in the graph.

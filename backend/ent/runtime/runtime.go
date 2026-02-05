@@ -10,6 +10,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/balancesnapshotdaily"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
@@ -288,6 +289,20 @@ func init() {
 	announcementreadDescReadAt := announcementreadFields[2].Descriptor()
 	// announcementread.DefaultReadAt holds the default value on creation for the read_at field.
 	announcementread.DefaultReadAt = announcementreadDescReadAt.Default.(func() time.Time)
+	balancesnapshotdailyFields := schema.BalanceSnapshotDaily{}.Fields()
+	_ = balancesnapshotdailyFields
+	// balancesnapshotdailyDescTotalBalance is the schema descriptor for total_balance field.
+	balancesnapshotdailyDescTotalBalance := balancesnapshotdailyFields[1].Descriptor()
+	// balancesnapshotdaily.DefaultTotalBalance holds the default value on creation for the total_balance field.
+	balancesnapshotdaily.DefaultTotalBalance = balancesnapshotdailyDescTotalBalance.Default.(float64)
+	// balancesnapshotdailyDescUserCount is the schema descriptor for user_count field.
+	balancesnapshotdailyDescUserCount := balancesnapshotdailyFields[2].Descriptor()
+	// balancesnapshotdaily.DefaultUserCount holds the default value on creation for the user_count field.
+	balancesnapshotdaily.DefaultUserCount = balancesnapshotdailyDescUserCount.Default.(int64)
+	// balancesnapshotdailyDescComputedAt is the schema descriptor for computed_at field.
+	balancesnapshotdailyDescComputedAt := balancesnapshotdailyFields[3].Descriptor()
+	// balancesnapshotdaily.DefaultComputedAt holds the default value on creation for the computed_at field.
+	balancesnapshotdaily.DefaultComputedAt = balancesnapshotdailyDescComputedAt.Default.(func() time.Time)
 	groupMixin := schema.Group{}.Mixin()
 	groupMixinHooks1 := groupMixin[1].Hooks()
 	group.Hooks[0] = groupMixinHooks1[0]

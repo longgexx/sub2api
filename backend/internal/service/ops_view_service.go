@@ -6,6 +6,7 @@ import (
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
+	"github.com/Wei-Shaw/sub2api/ent/balancesnapshotdaily"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
@@ -122,18 +123,29 @@ func (s *OpsViewService) GetTrend(ctx context.Context, days int, tz string) ([]O
 
 	points := make([]OpsViewTrendPoint, 0, days)
 
+	// 获取日期范围内的所有余额快照
+	startDate := todayStart.Add(-time.Duration(days-1) * 24 * time.Hour)
+	balanceMap := s.getBalanceSnapshotsMap(ctx, startDate, todayStart.Add(24*time.Hour))
+
 	for i := days - 1; i >= 0; i-- {
 		dayStart := todayStart.Add(-time.Duration(i) * 24 * time.Hour)
 		dayEnd := dayStart.Add(24 * time.Hour)
+		dateStr := dayStart.Format("2006-01-02")
 
 		point := OpsViewTrendPoint{
-			Date: dayStart.Format("2006-01-02"),
+			Date: dateStr,
 		}
 
 		point.Consumption, _ = s.getConsumption(ctx, dayStart, dayEnd)
 		point.PaymentRecharge, _ = s.getPaymentRecharge(ctx, dayStart, dayEnd)
 		point.RedeemRecharge, _ = s.getRedeemRecharge(ctx, dayStart, dayEnd)
 		point.TotalRecharge = point.PaymentRecharge + point.RedeemRecharge
+
+		// 获取当日余额快照（使用 UTC 日期字符串匹配）
+		utcDateStr := dayStart.UTC().Format("2006-01-02")
+		if balance, ok := balanceMap[utcDateStr]; ok {
+			point.TotalBalance = balance
+		}
 
 		points = append(points, point)
 	}
@@ -675,4 +687,84 @@ func (s *OpsViewService) calcChangeRate(oldValue, newValue float64) float64 {
 		return 100 // 从0增长视为100%增长
 	}
 	return ((newValue - oldValue) / oldValue) * 100
+}
+
+// getBalanceSnapshotsMap 获取日期范围内的余额快照映射
+func (s *OpsViewService) getBalanceSnapshotsMap(ctx context.Context, start, end time.Time) map[string]float64 {
+	result := make(map[string]float64)
+
+	// 转换为 UTC 日期范围进行查询
+	startUTC := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
+	endUTC := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, time.UTC)
+
+	snapshots, err := s.entClient.BalanceSnapshotDaily.Query().
+		Where(
+			balancesnapshotdaily.SnapshotDateGTE(startUTC),
+			balancesnapshotdaily.SnapshotDateLTE(endUTC),
+		).
+		All(ctx)
+	if err != nil {
+		return result
+	}
+
+	for _, snapshot := range snapshots {
+		// 使用 UTC 格式化日期字符串
+		dateStr := snapshot.SnapshotDate.UTC().Format("2006-01-02")
+		result[dateStr] = snapshot.TotalBalance
+	}
+
+	return result
+}
+
+// CollectDailyBalanceSnapshot 采集指定日期的余额快照
+// 如果当日快照已存在则更新，否则创建新快照
+func (s *OpsViewService) CollectDailyBalanceSnapshot(ctx context.Context, date time.Time) error {
+	// 将日期规范化为当天 00:00:00 UTC
+	snapshotDate := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+
+	// 获取当前总余额和用户数
+	totalBalance, _ := s.getTotalBalance(ctx)
+	userCount, _ := s.getUserCountWithBalance(ctx)
+
+	// 检查是否已存在当日快照
+	existing, err := s.entClient.BalanceSnapshotDaily.Query().
+		Where(balancesnapshotdaily.SnapshotDateEQ(snapshotDate)).
+		Only(ctx)
+
+	if err != nil && !dbent.IsNotFound(err) {
+		return err
+	}
+
+	if existing != nil {
+		// 更新现有快照
+		_, err = existing.Update().
+			SetTotalBalance(totalBalance).
+			SetUserCount(userCount).
+			SetComputedAt(time.Now()).
+			Save(ctx)
+		return err
+	}
+
+	// 创建新快照
+	_, err = s.entClient.BalanceSnapshotDaily.Create().
+		SetSnapshotDate(snapshotDate).
+		SetTotalBalance(totalBalance).
+		SetUserCount(userCount).
+		SetComputedAt(time.Now()).
+		Save(ctx)
+	return err
+}
+
+// getUserCountWithBalance 获取有余额的用户数
+func (s *OpsViewService) getUserCountWithBalance(ctx context.Context) (int64, error) {
+	count, err := s.entClient.User.Query().
+		Where(
+			user.DeletedAtIsNil(),
+			user.BalanceGT(0),
+		).
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return int64(count), nil
 }

@@ -67,6 +67,7 @@ type OpsViewTrendPoint struct {
 	PaymentRecharge float64 `json:"payment_recharge"` // 平台充值
 	RedeemRecharge  float64 `json:"redeem_recharge"`  // 兑换充值
 	TotalRecharge   float64 `json:"total_recharge"`   // 充值总额
+	TotalBalance    float64 `json:"total_balance"`    // 当日总余额快照
 }
 
 // OpsViewUserGrowthPoint 用户增长数据点

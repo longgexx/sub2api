@@ -3333,6 +3333,7 @@ export default {
         paymentRecharge: '平台充值',
         redeemRecharge: '兑换充值',
         totalRecharge: '总充值',
+        totalBalance: '总余额',
         empty: '暂无趋势数据'
       },
       // User Growth Chart

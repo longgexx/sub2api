@@ -3180,6 +3180,7 @@ export default {
         paymentRecharge: 'Payment',
         redeemRecharge: 'Redeem',
         totalRecharge: 'Total Recharge',
+        totalBalance: 'Total Balance',
         empty: 'No trend data available'
       },
       // User Growth Chart

@@ -43,6 +43,7 @@ export interface OpsViewTrendPoint {
   payment_recharge: number
   redeem_recharge: number
   total_recharge: number
+  total_balance: number
 }
 
 export interface OpsViewUserGrowthPoint {

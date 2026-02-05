@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/balancesnapshotdaily"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
@@ -98,6 +99,7 @@ func checkColumn(t, c string) error {
 			accountgroup.Table:            accountgroup.ValidColumn,
 			announcement.Table:            announcement.ValidColumn,
 			announcementread.Table:        announcementread.ValidColumn,
+			balancesnapshotdaily.Table:    balancesnapshotdaily.ValidColumn,
 			group.Table:                   group.ValidColumn,
 			paymentorder.Table:            paymentorder.ValidColumn,
 			promocode.Table:               promocode.ValidColumn,
