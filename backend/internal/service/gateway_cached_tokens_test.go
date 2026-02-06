@@ -167,7 +167,8 @@ func TestStreamingReconcile_MessageDelta(t *testing.T) {
 		reconcileCachedTokens(u)
 	}
 
-	usage := event["usage"].(map[string]any)
+	usage, ok := event["usage"].(map[string]any)
+	require.True(t, ok)
 	assert.Equal(t, float64(15), usage["cache_read_input_tokens"])
 }
 
@@ -187,7 +188,8 @@ func TestStreamingReconcile_MessageDelta_NativeClaude(t *testing.T) {
 		reconcileCachedTokens(u)
 	}
 
-	usage := event["usage"].(map[string]any)
+	usage, ok := event["usage"].(map[string]any)
+	require.True(t, ok)
 	_, hasCacheRead := usage["cache_read_input_tokens"]
 	assert.False(t, hasCacheRead, "不应为原生 Claude 响应注入 cache_read_input_tokens")
 }
