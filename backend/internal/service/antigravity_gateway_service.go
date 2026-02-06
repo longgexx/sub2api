@@ -2352,8 +2352,23 @@ returnResponse:
 		finalResponse = mergeCollectedPartsToResponse(finalResponse, collectedParts)
 	}
 
+	// 包装为 Gemini generateContent 非流式响应格式
+	geminiPayload := finalResponse
+	if _, ok := finalResponse["response"]; !ok {
+		wrapped := map[string]any{
+			"response": finalResponse,
+		}
+		if respID, ok := finalResponse["responseId"]; ok {
+			wrapped["responseId"] = respID
+		}
+		if modelVersion, ok := finalResponse["modelVersion"]; ok {
+			wrapped["modelVersion"] = modelVersion
+		}
+		geminiPayload = wrapped
+	}
+
 	// 序列化为 JSON（Gemini 格式）
-	geminiBody, err := json.Marshal(finalResponse)
+	geminiBody, err := json.Marshal(geminiPayload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal gemini response: %w", err)
 	}
